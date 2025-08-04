@@ -54,6 +54,7 @@ alwaysApply: false
 - Emphasize step-by-step approach, practical examples, visual explanations, and interaction
 - Provide specific and constructive feedback with positive reinforcement and growth motivation
 - Focus code reviews on readability, maintainability, type safety, performance, and testability
+- Delivers information following the principles of functional programming
 
 ## My Coding Style
 

@@ -267,3 +267,160 @@ export const getMaxApplicableDiscount = (
 - **결과**: 깔끔하고 유지보수하기 쉬운 코드
 
 이러한 함수합성 패턴은 앞으로의 Hook 분리와 컴포넌트 분리에서도 계속 활용될 것입니다.
+
+## 🎣 Hook vs Model 차이점
+
+### Hook과 Model의 개념적 차이
+
+리팩토링을 진행하기 전에 **Hook**과 **Model**의 차이점을 명확히 이해하는 것이 중요합니다.
+
+#### **Hook (React Hook)**
+
+```typescript
+// hooks/useLocalStorage.ts
+export const useLocalStorage = <T>(key: string, initialValue: T) => {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return initialValue;
+      }
+    }
+    return initialValue;
+  });
+
+  useEffect(() => {
+    if (storedValue !== undefined) {
+      localStorage.setItem(key, JSON.stringify(storedValue));
+    } else {
+      localStorage.removeItem(key);
+    }
+  }, [key, storedValue]);
+
+  return [storedValue, setStoredValue] as const;
+};
+```
+
+**Hook의 특징:**
+- ✅ **React 생명주기와 연동**: useState, useEffect 사용
+- ✅ **상태 관리**: 컴포넌트의 상태를 관리
+- ✅ **재사용 가능**: 여러 컴포넌트에서 사용
+- ✅ **부수 효과**: localStorage 읽기/쓰기, API 호출 등
+
+#### **Model (데이터 모델)**
+
+```typescript
+// models/Product.ts
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  discounts: Discount[];
+}
+
+export class ProductModel {
+  static validate(product: Product): string[] {
+    const errors: string[] = [];
+    if (!product.name.trim()) errors.push('상품명은 필수입니다');
+    if (product.price <= 0) errors.push('가격은 0보다 커야 합니다');
+    if (product.stock < 0) errors.push('재고는 0 이상이어야 합니다');
+    return errors;
+  }
+
+  static calculateDiscount(product: Product, quantity: number): number {
+    return product.discounts.reduce((maxDiscount, discount) => {
+      return quantity >= discount.quantity && discount.rate > maxDiscount
+        ? discount.rate
+        : maxDiscount;
+    }, 0);
+  }
+}
+```
+
+**Model의 특징:**
+- ✅ **순수 함수**: 부수 효과 없음
+- ✅ **데이터 중심**: 비즈니스 로직과 검증
+- ✅ **테스트 용이**: 독립적으로 테스트 가능
+- ✅ **플랫폼 독립적**: React와 무관
+
+### 현재 프로젝트에서의 구분
+
+#### **Hook으로 분리할 것들**
+```typescript
+// hooks/useLocalStorage.ts - 로컬 스토리지 관리
+// hooks/useCart.ts - 장바구니 상태 관리
+// hooks/useProducts.ts - 상품 상태 관리
+// hooks/useCoupons.ts - 쿠폰 상태 관리
+```
+
+#### **Model로 분리할 것들**
+```typescript
+// models/Product.ts - 상품 검증 및 계산
+// models/Cart.ts - 장바구니 계산 로직
+// models/Coupon.ts - 쿠폰 적용 로직
+```
+
+### 실제 차이점 예시
+
+#### **Hook (상태 관리)**
+```typescript
+// hooks/useCart.ts
+export const useCart = () => {
+  const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
+
+  const addToCart = useCallback((product: Product) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.product.id === product.id);
+      if (existingItem) {
+        return prevCart.map(item =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...prevCart, { product, quantity: 1 }];
+    });
+  }, []);
+
+  return { cart, addToCart };
+};
+```
+
+#### **Model (비즈니스 로직)**
+```typescript
+// models/Cart.ts
+export class CartModel {
+  static addItem(cart: CartItem[], product: Product): CartItem[] {
+    const existingItem = cart.find(item => item.product.id === product.id);
+    if (existingItem) {
+      return cart.map(item =>
+        item.product.id === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
+    }
+    return [...cart, { product, quantity: 1 }];
+  }
+
+  static calculateTotal(cart: CartItem[]): number {
+    return cart.reduce((total, item) => {
+      return total + (item.product.price * item.quantity);
+    }, 0);
+  }
+}
+```
+
+### 결론
+
+- **Hook**: React 상태 관리, 생명주기 연동, 부수 효과
+- **Model**: 순수 비즈니스 로직, 데이터 검증, 계산
+
+현재 프로젝트에서는 **Hook 분리**부터 시작하는 것이 맞습니다. 왜냐하면:
+1. 로컬 스토리지 관리가 우선
+2. 상태 관리 로직이 복잡함
+3. Model은 이미 `utils/calculators.ts`로 분리됨
+
+이러한 이해를 바탕으로 **useLocalStorage Hook 분리**부터 시작할 준비가 되었습니다.
