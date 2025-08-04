@@ -372,3 +372,109 @@ export const useCart = () => {
 너무 세분화하면 오히려 **"과도한 추상화"**가 되어 코드를 이해하기 어려워질 수 있습니다.
 
 현재 `calculators.ts`와 `formatters.ts`의 함수들은 모두 **진정한 순수함수**이며, 함수형 프로그래밍의 합성을 통해 더 깔끔하고 유지보수하기 쉬운 코드가 되었습니다.
+
+##  2024-08-04 추가 작업 요약
+
+###  오늘 완료된 작업
+
+#### 1. calculators.ts 리팩토링 완료
+- **중간 수준 분리** 적용: 과도한 추상화 방지하면서 의미 있는 단위로 분리
+- **매직 넘버 제거**: `BULK_PURCHASE_THRESHOLD`, `BULK_PURCHASE_BONUS`, `MAX_DISCOUNT_RATE` 상수 분리
+- **함수합성 패턴 적용**: 작은 순수함수들을 조합해서 복잡한 기능 구현
+
+#### 2. 함수합성 개념 정리
+- **step1.md에 함수합성 섹션 추가**: 함수형 프로그래밍의 핵심 개념 정리
+- **실제 적용 사례 포함**: 현재 프로젝트에서의 함수합성 예시
+- **장점과 원칙 정리**: 가독성, 테스트 용이성, 재사용성 등
+
+### 🔧 리팩토링된 코드 구조
+
+```typescript
+// 상수 정의
+const BULK_PURCHASE_THRESHOLD = 10;
+const BULK_PURCHASE_BONUS = 0.05;
+const MAX_DISCOUNT_RATE = 0.5;
+
+// 유틸리티 함수
+const roundToInteger = (value: number): number => Math.round(value);
+
+// 중간 수준 분리된 함수들
+const calculateBaseDiscount = (discounts, quantity) => { /* ... */ };
+const hasBulkPurchase = (cart) => { /* ... */ };
+const applyBulkPurchaseDiscount = (baseDiscount) => { /* ... */ };
+
+// 함수합성을 통한 최종 함수
+export const getMaxApplicableDiscount = (item, cart) => {
+  const baseDiscount = calculateBaseDiscount(item.product.discounts, item.quantity);
+  
+  if (hasBulkPurchase(cart)) {
+    return applyBulkPurchaseDiscount(baseDiscount);
+  }
+  
+  return baseDiscount;
+};
+```
+
+###  학습한 내용
+
+1. **함수합성의 중요성**: 작은 순수함수들을 조합해서 복잡한 기능 구현
+2. **적절한 추상화 수준**: 과도한 세분화 방지와 의미 있는 단위 분리의 균형
+3. **매직 넘버 제거**: 상수 분리를 통한 유지보수성 향상
+4. **함수형 프로그래밍 패턴**: 순수함수들의 합성을 통한 깔끔한 코드 구조
+
+### 🎯 다음 단계 준비
+
+- **2단계 Hook 분리**: 상태 관리 로직 분리 준비 완료
+- **함수합성 패턴 활용**: 앞으로의 리팩토링에서 계속 활용 예정
+- **Jotai 도입 준비**: 순수함수와 상태 관리의 조화로운 결합
+
+### 💡 핵심 인사이트
+
+**"레고 블록 조립"** 개념으로 함수합성 이해:
+- 작은 블록들(순수함수)을 조합해서 복잡한 기능 만들기
+- 각 블록은 독립적이지만 조합하면 강력한 기능 구현
+- 유지보수성과 재사용성의 균형점 찾기
+
+이번 작업을 통해 **함수형 프로그래밍의 핵심 개념**을 실제 프로젝트에 적용하는 경험을 쌓았습니다.
+
+## 2024-08-04 오후 작업
+
+### **2단계: 검색 필터링 및 타입 분리 완료**
+
+#### 1. 검색 필터링 로직 분리
+- **파일 생성**: `src/basic/utils/filters.ts`
+- **분리된 함수**: `filterProducts` - 상품명과 설명으로 검색 필터링
+- **적용**: App.tsx의 복잡한 인라인 검색 로직을 순수함수로 분리
+
+#### 2. 타입 분리 및 정리
+- **파일 생성**: `src/basic/types.ts`
+- **분리된 타입들**: `ProductWithUI`, `Notification`, `ProductForm`, `CouponForm`
+- **결과**: 타입 안정성 확보 및 코드 구조화
+
+#### 3. 타입 에러 해결
+- **문제**: `ProductWithUI` 타입 상속 문제로 컴파일 에러 발생
+- **해결**: import 경로 수정 및 타입 정의 정리
+- **결과**: 모든 파일에서 타입 안정성 확보
+
+### 📊 작업 통계
+
+- **생성된 파일**: 2개 (`utils/filters.ts`, `types.ts`)
+- **수정된 파일**: 3개 (`App.tsx`, `calculators.ts`, `filters.ts`)
+- **분리된 함수**: 1개 (`filterProducts`)
+- **분리된 타입**: 4개
+- **해결된 에러**: 10+개
+
+### **핵심 성과**
+
+1. **검색 로직 분리**: 복잡한 인라인 필터링을 순수함수로 분리
+2. **타입 안정성**: 모든 파일에서 TypeScript 타입 에러 해결
+3. **코드 구조화**: 관련 타입들을 체계적으로 분리
+4. **재사용성 향상**: 검색 로직을 다른 컴포넌트에서도 사용 가능
+
+### **다음 단계 준비**
+
+- **3단계: 폼 검증 로직 분리** → `utils/validators.ts`
+- **4단계: 재고 상태 계산** → `utils/calculators.ts`에 추가
+- **5단계: Hook 분리** → 상태 관리 로직 분리
+
+### **현재 코드 구조**
