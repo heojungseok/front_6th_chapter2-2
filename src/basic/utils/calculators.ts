@@ -1,5 +1,46 @@
 import { CartItem, Coupon, Product } from '../../types';
 
+// 상수 정의 - 매직 넘버 제거
+const BULK_PURCHASE_THRESHOLD = 10;
+const BULK_PURCHASE_BONUS = 0.05;
+const MAX_DISCOUNT_RATE = 0.5;
+
+// 유틸리티 함수 - 반복되는 로직 분리
+const roundToInteger = (value: number): number => Math.round(value);
+
+// 할인 계산 관련 함수들 - 중간 수준 분리
+const calculateBaseDiscount = (
+  discounts: any[],
+  quantity: number
+): number => {
+  return discounts.reduce((maxDiscount, discount) => {
+    return quantity >= discount.quantity && discount.rate > maxDiscount
+      ? discount.rate
+      : maxDiscount;
+  }, 0);
+};
+
+const hasBulkPurchase = (cart: CartItem[]): boolean => {
+  return cart.some(cartItem => cartItem.quantity >= BULK_PURCHASE_THRESHOLD);
+};
+
+const applyBulkPurchaseDiscount = (baseDiscount: number): number => {
+  return Math.min(baseDiscount + BULK_PURCHASE_BONUS, MAX_DISCOUNT_RATE);
+};
+
+export const getMaxApplicableDiscount = (
+  item: CartItem,
+  cart: CartItem[]
+): number => {
+  const baseDiscount = calculateBaseDiscount(item.product.discounts, item.quantity);
+  
+  if (hasBulkPurchase(cart)) {
+    return applyBulkPurchaseDiscount(baseDiscount);
+  }
+  
+  return baseDiscount;
+};
+
 export const calculateItemTotal = (
   item: CartItem,
   cart: CartItem[]
@@ -8,28 +49,19 @@ export const calculateItemTotal = (
   const { quantity } = item;
   const discount = getMaxApplicableDiscount(item, cart);
 
-  return Math.round(price * quantity * (1 - discount));
+  return roundToInteger(price * quantity * (1 - discount));
 };
 
-export const getMaxApplicableDiscount = (
-  item: CartItem,
-  cart: CartItem[]
+// 쿠폰 적용 로직 - 의미 있는 단위로 분리
+const applyCouponDiscount = (
+  total: number,
+  coupon: Coupon
 ): number => {
-  const { discounts } = item.product;
-  const { quantity } = item;
-
-  const baseDiscount = discounts.reduce((maxDiscount, discount) => {
-    return quantity >= discount.quantity && discount.rate > maxDiscount
-      ? discount.rate
-      : maxDiscount;
-  }, 0);
-
-  const hasBulkPurchase = cart.some(cartItem => cartItem.quantity >= 10);
-  if (hasBulkPurchase) {
-    return Math.min(baseDiscount + 0.05, 0.5); // 대량 구매 시 추가 5% 할인
+  if (coupon.discountType === 'amount') {
+    return Math.max(0, total - coupon.discountValue);
+  } else {
+    return roundToInteger(total * (1 - coupon.discountValue / 100));
   }
-
-  return baseDiscount;
 };
 
 export const calculateCartTotal = (
@@ -49,21 +81,12 @@ export const calculateCartTotal = (
   });
 
   if (selectedCoupon) {
-    if (selectedCoupon.discountType === 'amount') {
-      totalAfterDiscount = Math.max(
-        0,
-        totalAfterDiscount - selectedCoupon.discountValue
-      );
-    } else {
-      totalAfterDiscount = Math.round(
-        totalAfterDiscount * (1 - selectedCoupon.discountValue / 100)
-      );
-    }
+    totalAfterDiscount = applyCouponDiscount(totalAfterDiscount, selectedCoupon);
   }
 
   return {
-    totalBeforeDiscount: Math.round(totalBeforeDiscount),
-    totalAfterDiscount: Math.round(totalAfterDiscount),
+    totalBeforeDiscount: roundToInteger(totalBeforeDiscount),
+    totalAfterDiscount: roundToInteger(totalAfterDiscount),
   };
 };
 
@@ -72,5 +95,6 @@ export const getRemainingStock = (
   cart: CartItem[]
 ): number => {
   const cartItem = cart.find(item => item.product.id === product.id);
-  return product.stock - (cartItem?.quantity || 0);
+  const quantityInCart = cartItem?.quantity || 0;
+  return product.stock - quantityInCart;
 };
