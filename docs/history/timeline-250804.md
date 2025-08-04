@@ -178,3 +178,197 @@ import {
 
 - [Basic 과제 요구사항](../pr/basic-requirements.md)
 - [리팩토링 계획](../work-plan.md)
+
+## 🔧 순수함수 내부 리팩토링 고려사항 (2024-08-04 추가)
+
+### 함수형 프로그래밍의 합성(Composition) 개념
+
+#### 기본 개념
+
+**함수형 프로그래밍의 합성**은 작은 순수함수들을 조합해서 더 복잡한 기능을 만드는 것입니다.
+
+```typescript
+// 작은 순수함수들
+const add = (a: number, b: number): number => a + b;
+const multiply = (a: number, b: number): number => a * b;
+const square = (x: number): number => x * x;
+
+// 합성: 작은 함수들을 조합해서 복잡한 기능 만들기
+const calculateComplexValue = (x: number, y: number): number => {
+  return square(add(multiply(x, 2), y)); // (2x + y)²
+};
+```
+
+#### 현재 코드에서의 합성 예시
+
+```typescript
+// calculators.ts에서의 합성
+export const getMaxApplicableDiscount = (
+  item: CartItem,
+  cart: CartItem[]
+): number => {
+  const baseDiscount = calculateBaseDiscount(
+    item.product.discounts,
+    item.quantity
+  );
+
+  if (hasBulkPurchase(cart)) {
+    return applyBulkPurchaseDiscount(baseDiscount); // 합성!
+  }
+
+  return baseDiscount;
+};
+```
+
+### 분리 수준에 대한 고려사항
+
+#### 1. 너무 세분화 (과도함) ❌
+
+```typescript
+// 한 줄짜리 함수들 - 의미 없음
+const add = (a: number, b: number): number => a + b;
+const multiply = (a: number, b: number): number => a * b;
+const square = (x: number): number => x * x;
+```
+
+#### 2. 중간 정도 분리 (적절함) ✅
+
+```typescript
+// 할인 계산 로직을 하나의 함수로
+const calculateDiscountWithBulkPurchase = (
+  discounts: any[],
+  quantity: number,
+  cart: CartItem[]
+): number => {
+  const baseDiscount = discounts.reduce((maxDiscount, discount) => {
+    return quantity >= discount.quantity && discount.rate > maxDiscount
+      ? discount.rate
+      : maxDiscount;
+  }, 0);
+
+  const hasBulkPurchase = cart.some(cartItem => cartItem.quantity >= 10);
+  if (hasBulkPurchase) {
+    return Math.min(baseDiscount + 0.05, 0.5);
+  }
+
+  return baseDiscount;
+};
+```
+
+#### 3. 분리하지 않음 (복잡함) ❌
+
+```typescript
+// 모든 로직이 한 함수에 - 읽기 어려움
+export const getMaxApplicableDiscount = (item, cart) => {
+  const baseDiscount = item.product.discounts.reduce((max, discount) => {
+    return item.quantity >= discount.quantity && discount.rate > max
+      ? discount.rate
+      : max;
+  }, 0);
+
+  if (cart.some(cartItem => cartItem.quantity >= 10)) {
+    return Math.min(baseDiscount + 0.05, 0.5);
+  }
+  return baseDiscount;
+};
+```
+
+### 적절한 분리의 기준
+
+#### ✅ 적절한 분리 기준:
+
+1. **의미 있는 단위**: 비즈니스 로직의 한 단계
+2. **재사용 가능성**: 다른 곳에서도 쓸 수 있는지
+3. **테스트 용이성**: 독립적으로 테스트하기 적당한 크기
+4. **가독성**: 함수명만 봐도 이해되는 수준
+
+#### ❌ 너무 세분화하지 않는 기준:
+
+1. **한 줄짜리 함수**: 의미가 없음
+2. **매우 구체적인 로직**: 재사용 불가능
+3. **너무 작은 단위**: 오히려 복잡해짐
+
+### 다른 수강생의 접근 방식과 비교
+
+#### 현재 우리의 접근 방식 (순수함수 분리)
+
+**장점:**
+
+- 테스트 용이성: 순수함수는 단위 테스트가 매우 쉬움
+- 재사용성: 다른 컴포넌트에서도 쉽게 사용 가능
+- 예측 가능성: 입력값만 알면 결과를 완전히 예측 가능
+- 함수형 프로그래밍: 부수 효과가 없어 안전함
+
+**단점:**
+
+- 인자 전달 복잡성: `cart`, `products` 등 많은 데이터를 매번 전달해야 함
+- Props Drilling: 컴포넌트 간 데이터 전달이 복잡해질 수 있음
+- 실용성 부족: React 컴포넌트에서는 상태 관리가 더 자연스러울 수 있음
+
+#### 다른 수강생의 접근 방식 (상태 관리 훅)
+
+**장점:**
+
+- 실용성: React의 상태 관리 패턴에 더 적합
+- 간결성: 인자 전달 없이 상태에 직접 접근
+- 성능: 불필요한 재계산 방지 가능
+- React 패러다임: 컴포넌트 중심 사고에 더 부합
+
+**단점:**
+
+- 테스트 복잡성: 상태 의존성으로 인한 테스트 어려움
+- 부수 효과: 상태 변경으로 인한 예측 불가능성
+- 재사용성 제한: 특정 상태에 종속됨
+
+### Jotai 사용 시 고려사항
+
+Jotai를 사용할 예정이므로 **순수함수 방식이 더 적합**합니다:
+
+```typescript
+// atoms/cart.ts
+export const cartAtom = atom<CartItem[]>([]);
+export const selectedCouponAtom = atom<Coupon | null>(null);
+
+// utils/calculators.ts (순수함수 유지)
+export const calculateItemTotal = (
+  item: CartItem,
+  cart: CartItem[]
+): number => {
+  // 순수함수로 유지
+};
+
+// hooks/useCart.ts
+export const useCart = () => {
+  const [cart, setCart] = useAtom(cartAtom);
+  const [selectedCoupon] = useAtom(selectedCouponAtom);
+
+  const calculateItemTotal = useCallback(
+    (item: CartItem) => {
+      return calculateItemTotal(item, cart); // 순수함수 호출
+    },
+    [cart]
+  );
+
+  return { cart, setCart, calculateItemTotal };
+};
+```
+
+**이유:**
+
+1. **Jotai의 장점 활용**: 상태는 Jotai로, 계산 로직은 순수함수로 분리
+2. **학습 효과**: 순수함수 개념 습득과 함수형 프로그래밍 이해
+3. **확장성**: 나중에 다른 상태 관리 라이브러리로 변경해도 순수함수는 그대로 사용
+4. **Jotai와의 시너지**: 각각의 역할이 명확해짐
+
+### 결론
+
+**중간 정도 분리**가 가장 적절합니다:
+
+- ✅ 비즈니스 로직 단위로 분리
+- ✅ 재사용 가능한 수준
+- ✅ 테스트하기 적당한 크기
+- ✅ 가독성과 유지보수성의 균형
+
+너무 세분화하면 오히려 **"과도한 추상화"**가 되어 코드를 이해하기 어려워질 수 있습니다.
+
+현재 `calculators.ts`와 `formatters.ts`의 함수들은 모두 **진정한 순수함수**이며, 함수형 프로그래밍의 합성을 통해 더 깔끔하고 유지보수하기 쉬운 코드가 되었습니다.
