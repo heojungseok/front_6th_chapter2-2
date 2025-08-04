@@ -1,4 +1,4 @@
-import { CartItem, Coupon } from '../../types';
+import { CartItem, Coupon, Product } from '../../types';
 
 export const calculateItemTotal = (
   item: CartItem,
@@ -65,4 +65,12 @@ export const calculateCartTotal = (
     totalBeforeDiscount: Math.round(totalBeforeDiscount),
     totalAfterDiscount: Math.round(totalAfterDiscount),
   };
+};
+
+export const getRemainingStock = (
+  product: Product,
+  cart: CartItem[]
+): number => {
+  const cartItem = cart.find(item => item.product.id === product.id);
+  return product.stock - (cartItem?.quantity || 0);
 };
