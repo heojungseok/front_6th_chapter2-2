@@ -7,17 +7,9 @@ import {
   getRemainingStock,
 } from './utils/calculators';
 import { formatPrice } from './utils/formatters';
-
-interface ProductWithUI extends Product {
-  description?: string;
-  isRecommended?: boolean;
-}
-
-interface Notification {
-  id: string;
-  message: string;
-  type: 'error' | 'success' | 'warning';
-}
+import { generateOrderNumber } from './utils/generators';
+import { filterProducts } from './utils/filters';
+import { ProductWithUI, Notification, ProductForm, CouponForm } from './types';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -119,7 +111,7 @@ const App = () => {
 
   // Admin
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [productForm, setProductForm] = useState({
+  const [productForm, setProductForm] = useState<ProductForm>({
     name: '',
     price: 0,
     stock: 0,
@@ -127,7 +119,7 @@ const App = () => {
     discounts: [] as Array<{ quantity: number; rate: number }>,
   });
 
-  const [couponForm, setCouponForm] = useState({
+  const [couponForm, setCouponForm] = useState<CouponForm>({
     name: '',
     code: '',
     discountType: 'amount' as 'amount' | 'percentage',
@@ -268,7 +260,7 @@ const App = () => {
   );
 
   const completeOrder = useCallback(() => {
-    const orderNumber = `ORD-${Date.now()}`;
+    const orderNumber = generateOrderNumber();
     addNotification(
       `주문이 완료되었습니다. 주문번호: ${orderNumber}`,
       'success'
@@ -381,18 +373,7 @@ const App = () => {
 
   const totals = calculateCartTotal(cart, selectedCoupon || null);
 
-  const filteredProducts = debouncedSearchTerm
-    ? products.filter(
-        product =>
-          product.name
-            .toLowerCase()
-            .includes(debouncedSearchTerm.toLowerCase()) ||
-          (product.description &&
-            product.description
-              .toLowerCase()
-              .includes(debouncedSearchTerm.toLowerCase()))
-      )
-    : products;
+  const filteredProducts = filterProducts(products, debouncedSearchTerm);
 
   return (
     <div className='min-h-screen bg-gray-50'>
