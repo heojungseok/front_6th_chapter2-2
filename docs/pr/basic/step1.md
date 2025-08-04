@@ -203,3 +203,67 @@ export const calculateItemTotal = (
 - [리팩토링 계획](../work-plan.md)
 - [작업 타임라인](./work-timeline-250804.md)
 - [순수함수 중요성](./step1-pure-functions-importance.md)
+
+## 🧩 함수합성 (Function Composition) 개념
+
+### 함수합성이란?
+
+**함수합성**은 작은 순수함수들을 조합해서 더 복잡한 기능을 만드는 함수형 프로그래밍의 핵심 개념입니다.
+
+### 기본 개념
+
+```typescript
+// 작은 순수함수들
+const add = (a: number, b: number): number => a + b;
+const multiply = (a: number, b: number): number => a * b;
+const square = (x: number): number => x * x;
+
+// 합성: 작은 함수들을 조합해서 복잡한 기능 만들기
+const calculateComplexValue = (x: number, y: number): number => {
+  return square(add(multiply(x, 2), y)); // (2x + y)²
+};
+```
+
+### 현재 코드에서의 함수합성 예시
+
+```typescript
+// calculators.ts에서의 함수합성
+export const getMaxApplicableDiscount = (
+  item: CartItem,
+  cart: CartItem[]
+): number => {
+  // 1단계: 기본 할인 계산
+  const baseDiscount = calculateBaseDiscount(
+    item.product.discounts,
+    item.quantity
+  );
+
+  // 2단계: 대량 구매 할인 적용 (합성!)
+  if (hasBulkPurchase(cart)) {
+    return applyBulkPurchaseDiscount(baseDiscount);
+  }
+
+  return baseDiscount;
+};
+```
+
+### 함수합성의 장점
+
+1. **가독성 향상**: 각 단계가 명확함
+2. **테스트 용이성**: 각 함수를 독립적으로 테스트 가능
+3. **재사용성**: 다른 곳에서도 조합해서 사용 가능
+
+### 함수합성의 원칙
+
+1. **단일 책임 원칙**: 각 함수가 하나의 책임만
+2. **순수함수 유지**: 부수 효과 없이
+3. **적절한 추상화 수준**: 과도한 세분화 방지
+
+### 결론
+
+함수합성은 **"레고 블록 조립"**과 같습니다:
+- **작은 블록들**: 각각의 순수함수
+- **조립 과정**: 함수들을 조합해서 복잡한 기능 만들기
+- **결과**: 깔끔하고 유지보수하기 쉬운 코드
+
+이러한 함수합성 패턴은 앞으로의 Hook 분리와 컴포넌트 분리에서도 계속 활용될 것입니다.

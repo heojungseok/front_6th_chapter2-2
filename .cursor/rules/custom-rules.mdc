@@ -54,3 +54,9 @@ alwaysApply: false
 - Emphasize step-by-step approach, practical examples, visual explanations, and interaction
 - Provide specific and constructive feedback with positive reinforcement and growth motivation
 - Focus code reviews on readability, maintainability, type safety, performance, and testability
+
+## My Coding Style
+
+My coding style favors simplicity and clarity.  
+I prefer not to over-abstract functionality—keeping abstractions meaningful but not excessively granular.  
+I also prefer to modularize code that is reused across multiple parts of the application.
