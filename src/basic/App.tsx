@@ -1,16 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
-import { CartItem, Coupon, Product } from '../types';
+import { CartItem, Coupon } from '../types';
 import {
   calculateCartTotal,
   calculateItemTotal,
-  getMaxApplicableDiscount,
   getRemainingStock,
 } from './utils/calculators';
 import { formatPrice } from './utils/formatters';
 import { generateOrderNumber } from './utils/generators';
 import { filterProducts } from './utils/filters';
-import { ProductWithUI, Notification, ProductForm, CouponForm } from './types';
+import { ProductWithUI, ProductForm, CouponForm } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useNotifications } from './hooks/useNotifications';
+import { useDebounce } from './hooks/useDebounce';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -77,14 +78,15 @@ const App = () => {
 
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { notifications, addNotification, removeNotification } =
+    useNotifications();
   const [showCouponForm, setShowCouponForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
     'products'
   );
   const [showProductForm, setShowProductForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Admin
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
@@ -103,31 +105,12 @@ const App = () => {
     discountValue: 0,
   });
 
-  const addNotification = useCallback(
-    (message: string, type: 'error' | 'success' | 'warning' = 'success') => {
-      const id = Date.now().toString();
-      setNotifications(prev => [...prev, { id, message, type }]);
-
-      setTimeout(() => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
-      }, 3000);
-    },
-    []
-  );
-
   const [totalItemCount, setTotalItemCount] = useState(0);
 
   useEffect(() => {
     const count = cart.reduce((sum, item) => sum + item.quantity, 0);
     setTotalItemCount(count);
   }, [cart]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   const addToCart = useCallback(
     (product: ProductWithUI) => {
@@ -353,9 +336,7 @@ const App = () => {
             >
               <span className='mr-2'>{notif.message}</span>
               <button
-                onClick={() =>
-                  setNotifications(prev => prev.filter(n => n.id !== notif.id))
-                }
+                onClick={() => removeNotification(notif.id)}
                 className='text-white hover:text-gray-200'
               >
                 <svg
