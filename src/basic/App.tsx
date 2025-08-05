@@ -1,20 +1,18 @@
-import { useState, useCallback, useEffect } from 'react';
-import { CartItem } from './types';
+import { useState} from 'react';
 import {
   calculateCartTotal,
   calculateItemTotal,
   getRemainingStock,
 } from './utils/calculators';
 import { formatPrice } from './utils/formatters';
-import { generateOrderNumber } from './utils/generators';
 import { filterProducts } from './utils/filters';
 import { ProductWithUI, CouponForm } from './types';
-import { useLocalStorage } from './hooks/useLocalStorage';
 import { useNotifications } from './hooks/useNotifications';
 import { useDebounce } from './hooks/useDebounce';
 import { useCoupon } from './hooks/useCoupon';
 import { useProducts } from './hooks/useProducts';
 import { productService } from './services/productService';
+import { useCart } from './hooks/useCart';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -68,7 +66,6 @@ const App = () => {
     setEditingProduct,
     setShowProductForm,
   } = useProducts({ addNotification, initialProducts });
-  const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
 
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -76,6 +73,11 @@ const App = () => {
   const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
     'products'
   );
+
+  const { cart, addToCart, updateQuantity, completeOrder, totalItemCount, removeFromCart } = useCart({
+    products,
+    addNotification,
+  });
 
   const {
     coupons,
@@ -96,92 +98,7 @@ const App = () => {
     discountValue: 0,
   });
 
-  const [totalItemCount, setTotalItemCount] = useState(0);
-
-  useEffect(() => {
-    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-    setTotalItemCount(count);
-  }, [cart]);
-
-  const addToCart = useCallback(
-    (product: ProductWithUI) => {
-      const remainingStock = getRemainingStock(product, cart);
-      if (remainingStock <= 0) {
-        addNotification('재고가 부족합니다!', 'error');
-        return;
-      }
-
-      setCart(prevCart => {
-        const existingItem = prevCart.find(
-          item => item.product.id === product.id
-        );
-
-        if (existingItem) {
-          const newQuantity = existingItem.quantity + 1;
-
-          if (newQuantity > product.stock) {
-            addNotification(
-              `재고는 ${product.stock}개까지만 있습니다.`,
-              'error'
-            );
-            return prevCart;
-          }
-
-          return prevCart.map(item =>
-            item.product.id === product.id
-              ? { ...item, quantity: newQuantity }
-              : item
-          );
-        }
-
-        return [...prevCart, { product, quantity: 1 }];
-      });
-
-      addNotification('장바구니에 담았습니다', 'success');
-    },
-    [cart, addNotification, getRemainingStock]
-  );
-
-  const removeFromCart = useCallback((productId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.product.id !== productId));
-  }, []);
-
-  const updateQuantity = useCallback(
-    (productId: string, newQuantity: number) => {
-      if (newQuantity <= 0) {
-        removeFromCart(productId);
-        return;
-      }
-
-      const product = products.find(p => p.id === productId);
-      if (!product) return;
-
-      const maxStock = product.stock;
-      if (newQuantity > maxStock) {
-        addNotification(`재고는 ${maxStock}개까지만 있습니다.`, 'error');
-        return;
-      }
-
-      setCart(prevCart =>
-        prevCart.map(item =>
-          item.product.id === productId
-            ? { ...item, quantity: newQuantity }
-            : item
-        )
-      );
-    },
-    [products, removeFromCart, addNotification, getRemainingStock]
-  );
-
-  const completeOrder = useCallback(() => {
-    const orderNumber = generateOrderNumber();
-    addNotification(
-      `주문이 완료되었습니다. 주문번호: ${orderNumber}`,
-      'success'
-    );
-    setCart([]);
-    clearSelectedCoupon(); // Hook의 함수 사용
-  }, [addNotification]);
+  
 
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
