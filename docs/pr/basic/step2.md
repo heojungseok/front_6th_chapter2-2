@@ -283,29 +283,62 @@ couponService.checkDuplicateCoupon(newCoupon, existingCoupons);
 ```
 ┌─────────────────────────────────────────┐
 │             App.tsx (UI Layer)          │
-│  • UI 렌더링 + 이벤트 처리               │
-│  • Hook들 조합 및 의존성 주입            │
+│  ┌─────────────────────────────────────┐ │
+│  │        React Component              │ │
+│  │     (렌더링 + 이벤트 처리)            │ │
+│  └─────────────────────────────────────┘ │
 └─────────────────┬───────────────────────┘
-                  │ 상태 관리 위임
+                  │ 의존성 주입
 ┌─────────────────▼───────────────────────┐
 │          Hook Layer (상태 관리)          │
-│  • useLocalStorage, useNotifications    │
-│  • useDebounce, useCoupon               │
-│  • React 상태 + 비즈니스 로직 조합       │
+│  ┌─────────────────────────────────────┐ │
+│  │   useCoupon, useNotifications,      │ │
+│  │   useLocalStorage, useDebounce      │ │
+│  │   (React 상태 + 비즈니스 로직 조합)  │ │
+│  └─────────────────────────────────────┘ │
 └─────────────────┬───────────────────────┘
                   │ 비즈니스 로직 호출
 ┌─────────────────▼───────────────────────┐
-│        Service Layer (도메인 로직)       │
-│  • couponService                        │
-│  • 순수한 비즈니스 규칙 + 검증 로직      │
+│        Service Layer (비즈니스 로직)     │
+│  ┌─────────────────────────────────────┐ │
+│  │      couponService                  │ │
+│  │   (순수한 도메인 로직 + 검증)        │ │
+│  └─────────────────────────────────────┘ │
 └─────────────────┬───────────────────────┘
                   │ 유틸리티 호출
 ┌─────────────────▼───────────────────────┐
 │         Utils Layer (순수 함수)         │
-│  • calculators, formatters              │
-│  • 계산, 포맷팅, 필터링 등               │
+│  ┌─────────────────────────────────────┐ │
+│  │   calculators, formatters, etc      │ │
+│  │   (계산, 포맷팅, 필터링 등)           │ │
+│  └─────────────────────────────────────┘ │
 └─────────────────────────────────────────┘
 ```
+
+## 🔄 데이터 흐름
+
+UI 이벤트 (쿠폰 선택)
+↓
+App.tsx: applyCoupon(coupon) 호출
+↓
+useCoupon Hook:
+
+1. calculateCartTotal로 현재 총액 계산
+2. couponService.validateCouponApplication 호출
+3. 검증 결과에 따라 상태 업데이트
+   ↓
+   couponService: 순수한 비즈니스 로직 실행
+
+- 10,000원 이상 검증
+- percentage 타입 제한 확인
+  ↓
+  Hook: 검증 결과 기반 상태 업데이트
+- setSelectedCoupon(coupon)
+- addNotification(message)
+  ↓
+  App.tsx: 새로운 상태로 UI 리렌더링
+
+---
 
 ## 🔧 핵심 설계 원칙
 
@@ -341,3 +374,150 @@ expect(couponService.validateCouponApplication(coupon, 5000)).toEqual({
 // Hook: 모킹된 의존성으로 테스트
 const mockProps = { cart: [], calculateCartTotal: jest.fn() };
 ```
+
+## 🕐 5단계: useProducts Hook 분리 (도메인 서비스 패턴)
+
+### 목적
+
+상품 CRUD 로직과 상태 관리 분리
+
+### 도메인 서비스 패턴 적용
+
+**productService (순수 비즈니스 로직)**
+
+```typescript
+export const productService = {
+  validatePrice: (value: string): ValidationResult => {
+    if (value === '') return { isValid: true, message: '', correctedValue: 0 };
+    const price = parseInt(value);
+    if (isNaN(price)) {
+      return {
+        isValid: false,
+        message: '숫자만 입력해주세요.',
+        correctedValue: 0,
+      };
+    }
+    if (price <= 0) {
+      return {
+        isValid: false,
+        message: '가격은 0보다 커야 합니다.',
+        correctedValue: 0,
+      };
+    }
+    return { isValid: true, message: '', correctedValue: price };
+  },
+  validateStock: (value: string): ValidationResult => {
+    /* ... */
+  },
+  generateProductId: (): string => `p${Date.now()}`,
+  createProduct: (product: ProductForm): ProductWithUI => {
+    return { ...product, id: productService.generateProductId() };
+  },
+  updateProductList: (products, productId, updates) => {
+    return products.map(product =>
+      product.id === productId ? { ...product, ...updates } : product
+    );
+  },
+  removeProduct: (products, productId) => {
+    return products.filter(product => product.id !== productId);
+  },
+};
+```
+
+**useProducts Hook (상태 관리 + 서비스 조합)**
+
+```typescript
+export const useProducts = ({ addNotification, initialProducts }) => {
+  const [products, setProducts] = useLocalStorage('products', initialProducts);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [productForm, setProductForm] = useState({
+    /* ... */
+  });
+  const [showProductForm, setShowProductForm] = useState(false);
+
+  const addProduct = useCallback(
+    (product: ProductForm) => {
+      const newProduct = productService.createProduct(product);
+      setProducts(prev => [...prev, newProduct]);
+      addNotification('상품이 추가되었습니다.', 'success');
+    },
+    [addNotification]
+  );
+
+  const updateProduct = useCallback(
+    (productId: string, updates) => {
+      setProducts(prev => {
+        return productService.updateProductList(prev, productId, updates);
+      });
+      addNotification('상품이 수정되었습니다.', 'success');
+    },
+    [addNotification]
+  );
+
+  const deleteProduct = useCallback(
+    (productId: string) => {
+      setProducts(prev => productService.removeProduct(prev, productId));
+      addNotification('상품이 삭제되었습니다.', 'success');
+    },
+    [addNotification]
+  );
+
+  return {
+    products,
+    editingProduct,
+    productForm,
+    showProductForm,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    startEditProduct,
+    resetProductForm,
+    setProductForm,
+    setEditingProduct,
+    setShowProductForm,
+  };
+};
+```
+
+### 🚨 주요 트러블슈팅
+
+**문제**: "상품의 가격 입력 시 숫자만 허용된다" 테스트 실패
+
+**증상**: `TestingLibraryElementError: Unable to find an element with the placeholder text of: 숫자만 입력`
+
+**트러블슈팅 과정**:
+
+1. **데이터 문제 의심** → useProducts Hook에서 initialProducts 전달 확인
+2. **localStorage 문제 의심** → useLocalStorage Hook 초기화 로직 확인
+3. **렌더링 문제 발견** → 조건부 렌더링 구조 분석
+
+**근본 원인**: **"수정" 버튼의 onClick 핸들러가 잘못 설정됨**
+
+```typescript
+// ❌ 문제가 있던 코드
+<button onClick={() => updateProduct(product.id, product)}>
+  수정
+</button>
+
+// ✅ 수정된 코드
+<button onClick={() => startEditProduct(product)}>
+  수정
+</button>
+```
+
+**해결**: `updateProduct` → `startEditProduct`로 변경하여 상품 수정 폼이 열리도록 수정
+
+### 핵심 성과
+
+- **도메인 로직 분리**: 순수한 비즈니스 로직을 productService로 분리
+- **상태 관리 캡슐화**: 상품 관련 모든 상태를 useProducts Hook에서 관리
+- **테스트 용이성**: 도메인 로직과 React 상태 분리로 독립적 테스트 가능
+- **재사용성**: 다른 컴포넌트에서도 동일한 상품 관리 로직 활용 가능
+
+### 아키텍처 개선
+
+App.tsx (UI)
+↓ 의존성 주입
+useProducts Hook (상태 관리)
+↓ 비즈니스 로직 호출
+productService (도메인 로직)
