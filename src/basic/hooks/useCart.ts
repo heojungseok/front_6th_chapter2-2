@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { CartItem, ProductWithUI } from '../types';
+import { CartItem, Coupon, ProductWithUI } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 import { generateOrderNumber } from '../utils/generators';
 import { cartService } from '../services/cartService';
@@ -8,10 +8,11 @@ import { calculateCartTotal } from '../utils/calculators';
 
 interface UseCartProps {
   products: ProductWithUI[];
+  selectedCoupon: Coupon | null;
   addNotification: (message: string, type: 'error' | 'success' | 'warning') => void;
 }
 
-export const useCart = ({ products, addNotification }: UseCartProps) => {
+export const useCart = ({ products, selectedCoupon, addNotification }: UseCartProps) => {
   const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
   const [totalItemCount, setTotalItemCount] = useState(0);
   const [totals, setTotals] = useState<{
@@ -23,9 +24,9 @@ export const useCart = ({ products, addNotification }: UseCartProps) => {
   });
 
   useEffect(() => {
-    const calculatedTotals = calculateCartTotal(cart, null);
+    const calculatedTotals = calculateCartTotal(cart, selectedCoupon);
     setTotals(calculatedTotals);
-  }, [cart]);
+  }, [cart, selectedCoupon]);
 
   useEffect(() => {
     const count = cartService.calculateTotalItemCount(cart);

@@ -1,4 +1,4 @@
-import { CartItem, ProductWithUI } from "../types";
+import { CartItem, Coupon, ProductWithUI } from "../types";
 
 // services/cartService.ts
 export const cartService = {

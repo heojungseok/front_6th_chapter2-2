@@ -52,6 +52,16 @@ const App = () => {
   const { notifications, addNotification, removeNotification } =
     useNotifications();
   const { searchTerm, setSearchTerm, debouncedSearchTerm } = useSearch();
+  
+const {
+    coupons,
+    addCoupon,
+    selectedCoupon,
+    removeCoupon,
+    clearSelectedCoupon,
+    applyCoupon,
+  } = useCoupon({ cart: [], calculateCartTotal, addNotification });
+
   const {
     products,
     editingProduct,
@@ -68,35 +78,23 @@ const App = () => {
     setShowProductForm,
   } = useProducts({ addNotification, initialProducts, searchTerm: debouncedSearchTerm });
 
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { cart, addToCart, updateQuantity, completeOrder, removeFromCart, totalItemCount, totals } = useCart({
+    products,
+    selectedCoupon,
+    addNotification,
+  });
 
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showCouponForm, setShowCouponForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
     'products'
   );
-
-  const { cart, addToCart, updateQuantity, completeOrder, removeFromCart, totalItemCount } = useCart({
-    products,
-    addNotification,
-  });
-
-  const {
-    coupons,
-    addCoupon,
-    selectedCoupon,
-    removeCoupon,
-    clearSelectedCoupon,
-    applyCoupon,
-  } = useCoupon({ cart, calculateCartTotal, addNotification });
-
   const [couponForm, setCouponForm] = useState<CouponForm>({
     name: '',
     code: '',
     discountType: 'amount' as 'amount' | 'percentage',
     discountValue: 0,
   });
-
-  
 
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,8 +118,6 @@ const App = () => {
     });
     setShowCouponForm(false);
   };
-
-  const totals = calculateCartTotal(cart, selectedCoupon || null);
 
   return (
     <div className='min-h-screen bg-gray-50'>
