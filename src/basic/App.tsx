@@ -88,7 +88,7 @@ const App = () => {
 
   const { isAdmin, activeTab, showCouponForm, setIsAdmin, setActiveTab, setShowCouponForm } = useUIState();
   
-  const { couponForm, setCouponForm, resetCouponForm } = useCouponForm();
+  const { couponForm, setCouponForm } = useCouponForm();
 
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
