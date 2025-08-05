@@ -1,4 +1,3 @@
-
 export const formatPrice = (
   price: number,
   isAdmin: boolean = false,

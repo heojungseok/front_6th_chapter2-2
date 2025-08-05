@@ -4,7 +4,7 @@ import { useLocalStorage } from './useLocalStorage';
 import { generateOrderNumber } from '../utils/generators';
 import { cartService } from '../services/cartService';
 import { validateCartOperation } from '../utils/validators';
-
+import { calculateCartTotal } from '../utils/calculators';
 
 interface UseCartProps {
   products: ProductWithUI[];
@@ -14,6 +14,18 @@ interface UseCartProps {
 export const useCart = ({ products, addNotification }: UseCartProps) => {
   const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
   const [totalItemCount, setTotalItemCount] = useState(0);
+  const [totals, setTotals] = useState<{
+    totalBeforeDiscount: number;
+    totalAfterDiscount: number;
+  }>({
+    totalBeforeDiscount: 0,
+    totalAfterDiscount: 0,
+  });
+
+  useEffect(() => {
+    const calculatedTotals = calculateCartTotal(cart, null);
+    setTotals(calculatedTotals);
+  }, [cart]);
 
   useEffect(() => {
     const count = cartService.calculateTotalItemCount(cart);
@@ -85,6 +97,7 @@ export const useCart = ({ products, addNotification }: UseCartProps) => {
   return {
     cart,
     totalItemCount,
+    totals,
     addToCart,
     removeFromCart,
     updateQuantity,

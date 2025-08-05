@@ -5,14 +5,13 @@ import {
   getRemainingStock,
 } from './utils/calculators';
 import { formatPrice } from './utils/formatters';
-import { filterProducts } from './utils/filters';
 import { ProductWithUI, CouponForm } from './types';
 import { useNotifications } from './hooks/useNotifications';
-import { useDebounce } from './hooks/useDebounce';
 import { useCoupon } from './hooks/useCoupon';
 import { useProducts } from './hooks/useProducts';
 import { productService } from './services/productService';
 import { useCart } from './hooks/useCart';
+import { useSearch } from './hooks/useSearch';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -52,11 +51,13 @@ const initialProducts: ProductWithUI[] = [
 const App = () => {
   const { notifications, addNotification, removeNotification } =
     useNotifications();
+  const { searchTerm, setSearchTerm, debouncedSearchTerm } = useSearch();
   const {
     products,
     editingProduct,
     productForm,
     showProductForm,
+    filteredProducts,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -65,7 +66,7 @@ const App = () => {
     setProductForm,
     setEditingProduct,
     setShowProductForm,
-  } = useProducts({ addNotification, initialProducts });
+  } = useProducts({ addNotification, initialProducts, searchTerm: debouncedSearchTerm });
 
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -74,7 +75,7 @@ const App = () => {
     'products'
   );
 
-  const { cart, addToCart, updateQuantity, completeOrder, totalItemCount, removeFromCart } = useCart({
+  const { cart, addToCart, updateQuantity, completeOrder, removeFromCart, totalItemCount } = useCart({
     products,
     addNotification,
   });
@@ -87,9 +88,6 @@ const App = () => {
     clearSelectedCoupon,
     applyCoupon,
   } = useCoupon({ cart, calculateCartTotal, addNotification });
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   const [couponForm, setCouponForm] = useState<CouponForm>({
     name: '',
@@ -124,8 +122,6 @@ const App = () => {
   };
 
   const totals = calculateCartTotal(cart, selectedCoupon || null);
-
-  const filteredProducts = filterProducts(products, debouncedSearchTerm);
 
   return (
     <div className='min-h-screen bg-gray-50'>

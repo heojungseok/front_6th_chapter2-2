@@ -1,5 +1,3 @@
-// src/basic/services/productService.ts
-
 import { ProductForm, ProductWithUI } from '../types';
 import { validatePrice, validateStock } from '../utils/validators';
 

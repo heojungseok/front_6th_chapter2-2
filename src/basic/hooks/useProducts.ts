@@ -1,14 +1,17 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { productService } from '../services/productService';
 import { ProductWithUI, ProductForm } from '../types';
+import { filterProducts } from '../utils/filters';
 
 interface useProductProps {
+  searchTerm: string;
   addNotification: (message: string, type: 'success' | 'error') => void;
   initialProducts: ProductWithUI[];
 }
 
 export const useProducts = ({
+  searchTerm,
   addNotification,
   initialProducts,
 }: useProductProps) => {
@@ -16,6 +19,7 @@ export const useProducts = ({
     'products',
     initialProducts
   );
+  const [filteredProducts, setFilteredProducts] = useState<ProductWithUI[]>([]);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [productForm, setProductForm] = useState<ProductForm>({
     name: '',
@@ -25,6 +29,11 @@ export const useProducts = ({
     discounts: [],
   });
   const [showProductForm, setShowProductForm] = useState(false);
+
+  useEffect(() => {
+    const filtered = filterProducts(products, searchTerm);
+    setFilteredProducts(filtered);
+  }, [products, searchTerm]);
 
   const startEditProduct = (product: ProductWithUI) => {
     setEditingProduct(product.id);
@@ -83,6 +92,7 @@ export const useProducts = ({
     editingProduct,
     productForm,
     showProductForm,
+    filteredProducts,
     addProduct,
     updateProduct,
     deleteProduct,
