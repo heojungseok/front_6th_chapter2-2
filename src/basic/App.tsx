@@ -1,17 +1,18 @@
-import { useState} from 'react';
 import {
   calculateCartTotal,
   calculateItemTotal,
   getRemainingStock,
 } from './utils/calculators';
 import { formatPrice } from './utils/formatters';
-import { ProductWithUI, CouponForm } from './types';
+import { ProductWithUI } from './types';
 import { useNotifications } from './hooks/useNotifications';
 import { useCoupon } from './hooks/useCoupon';
 import { useProducts } from './hooks/useProducts';
 import { productService } from './services/productService';
 import { useCart } from './hooks/useCart';
 import { useSearch } from './hooks/useSearch';
+import { useUIState } from './hooks/useUIStates';
+import { useCouponForm } from './hooks/useCouponForm';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -51,9 +52,10 @@ const initialProducts: ProductWithUI[] = [
 const App = () => {
   const { notifications, addNotification, removeNotification } =
     useNotifications();
+
   const { searchTerm, setSearchTerm, debouncedSearchTerm } = useSearch();
   
-const {
+  const {
     coupons,
     addCoupon,
     selectedCoupon,
@@ -84,17 +86,9 @@ const {
     addNotification,
   });
 
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showCouponForm, setShowCouponForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
-    'products'
-  );
-  const [couponForm, setCouponForm] = useState<CouponForm>({
-    name: '',
-    code: '',
-    discountType: 'amount' as 'amount' | 'percentage',
-    discountValue: 0,
-  });
+  const { isAdmin, activeTab, showCouponForm, setIsAdmin, setActiveTab, setShowCouponForm } = useUIState();
+  
+  const { couponForm, setCouponForm, resetCouponForm } = useCouponForm();
 
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -6,12 +6,29 @@ import { cartService } from '../services/cartService';
 import { validateCartOperation } from '../utils/validators';
 import { calculateCartTotal } from '../utils/calculators';
 
+/**
+ * 장바구니 상태 관리 Hook의 Props 인터페이스
+ */
 interface UseCartProps {
   products: ProductWithUI[];
   selectedCoupon: Coupon | null;
   addNotification: (message: string, type: 'error' | 'success' | 'warning') => void;
 }
 
+/**
+ * 장바구니 상태를 관리하는 커스텀 Hook
+ * 
+ * 기능:
+ * - 장바구니 상품 관리 (추가, 제거, 수량 변경)
+ * - 총 개수 및 금액 계산
+ * - 쿠폰 적용된 할인 금액 계산
+ * - 주문 완료 처리
+ * 
+ * @param products - 상품 목록
+ * @param selectedCoupon - 선택된 쿠폰
+ * @param addNotification - 알림 추가 함수
+ * @returns 장바구니 관련 상태와 함수들
+ */
 export const useCart = ({ products, selectedCoupon, addNotification }: UseCartProps) => {
   const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
   const [totalItemCount, setTotalItemCount] = useState(0);

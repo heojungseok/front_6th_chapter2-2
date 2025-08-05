@@ -4,12 +4,29 @@ import { productService } from '../services/productService';
 import { ProductWithUI, ProductForm } from '../types';
 import { filterProducts } from '../utils/filters';
 
+/**
+ * 상품 관리 Hook의 Props 인터페이스
+ */
 interface useProductProps {
   searchTerm: string;
   addNotification: (message: string, type: 'success' | 'error') => void;
   initialProducts: ProductWithUI[];
 }
 
+/**
+ * 상품 상태를 관리하는 커스텀 Hook
+ * 
+ * 기능:
+ * - 상품 CRUD 작업 (추가, 수정, 삭제)
+ * - 상품 검색 및 필터링
+ * - 상품 폼 상태 관리
+ * - 편집 모드 관리
+ * 
+ * @param searchTerm - 검색어
+ * @param addNotification - 알림 추가 함수
+ * @param initialProducts - 초기 상품 목록
+ * @returns 상품 관련 상태와 함수들
+ */
 export const useProducts = ({
   searchTerm,
   addNotification,

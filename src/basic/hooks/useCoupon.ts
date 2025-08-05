@@ -3,6 +3,9 @@ import { CartItem, Coupon } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 import { couponService } from '../services/couponService';
 
+/**
+ * 초기 쿠폰 목록
+ */
 const initialCoupons: Coupon[] = [
   {
     name: '5000원 할인',
@@ -18,9 +21,9 @@ const initialCoupons: Coupon[] = [
   },
 ];
 
-// 쿠폰 목록을 localStorage에서 관리
-// 선택된 쿠폰 상태 관리
-// 쿠폰 적용, 추가, 삭제, 선택 해제 함수 제공
+/**
+ * 쿠폰 관리 Hook의 Props 인터페이스
+ */
 interface UseCouponsProps {
   cart: CartItem[];
   calculateCartTotal: (
@@ -33,6 +36,20 @@ interface UseCouponsProps {
   addNotification: (message: string, type: 'success' | 'error') => void;
 }
 
+/**
+ * 쿠폰 상태를 관리하는 커스텀 Hook
+ * 
+ * 기능:
+ * - 쿠폰 목록 관리
+ * - 선택된 쿠폰 관리
+ * - 쿠폰 적용 및 추가
+ * - 쿠폰 삭제 및 선택 해제
+ * 
+ * @param cart - 장바구니 상품 목록
+ * @param calculateCartTotal - 장바구니 총 금액 계산 함수
+ * @param addNotification - 알림 추가 함수
+ * @returns 쿠폰 관련 상태와 함수들
+ */
 export const useCoupon = ({
   cart,
   calculateCartTotal,
