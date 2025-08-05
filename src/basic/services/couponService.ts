@@ -1,4 +1,4 @@
-import { Coupon, CartItem } from '../../types';
+import { Coupon } from '../types';
 
 export interface ValidationResult {
   isValid: boolean;

@@ -1,4 +1,4 @@
-import { CartItem, Coupon, Product } from '../../types';
+import { CartItem, Coupon, Product } from '../types';
 
 // 상수 정의 - 매직 넘버 제거
 const BULK_PURCHASE_THRESHOLD = 10;
