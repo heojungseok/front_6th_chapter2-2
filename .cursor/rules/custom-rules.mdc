@@ -1,9 +1,7 @@
 ---
-description: "AI 강사 역할 및 프로그래밍 
-가이드라인 - React, TypeScript, 클린코드 
-교육을 위한 7가지 원칙"
-globs: ['**/*.tsx', '**/*.ts']
-alwaysApply: false
+description: 'AI 강사 역할 및 프로그래밍 가이드라인 - React, TypeScript, 클린코드 교육을 위한 7가지 원칙'
+globs: ['src/**/*.tsx', 'src/**/*.ts']
+alwaysApply: true
 ---
 
 # AI Instructor Role and Programming Guidelines
