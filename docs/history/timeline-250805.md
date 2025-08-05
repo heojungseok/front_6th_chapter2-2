@@ -271,3 +271,128 @@ const debouncedSearchTerm = useDebounce(searchTerm, 500);
 - 함수형 프로그래밍(순수함수, 불변성, 합성)
 
 ---
+
+### 4단계: useCoupon Hook 분리 (도메인 서비스 패턴)
+
+#### 작업 배경
+
+쿠폰 관련 로직이 App.tsx에 흩어져 있어 관심사 분리 필요
+
+- 쿠폰 적용/추가/삭제 함수들이 App.tsx에 분산
+- 비즈니스 로직(10,000원 이상, percentage 제한)이 컴포넌트에 하드코딩
+- selectedCoupon 상태 관리의 복잡성
+
+#### 도메인 서비스 패턴 적용
+
+**1. couponService 생성 (services/couponService.ts)**
+
+```typescript
+export const couponService = {
+  validateCouponApplication: (coupon, cartTotal) => {
+    if (cartTotal < 10000 && coupon.discountType === 'percentage') {
+      return { isValid: false, message: '10,000원 이상 구매 시 사용 가능' };
+    }
+    return { isValid: true, message: '쿠폰이 적용되었습니다' };
+  },
+  checkDuplicateCoupon: (newCoupon, existingCoupons) => {
+    /* ... */
+  },
+  shouldClearSelectedCoupon: (deletedCode, selectedCoupon) => {
+    /* ... */
+  },
+};
+```
+
+**2. useCoupon Hook 생성 (hooks/useCoupon.ts)**
+
+```typescript
+export const useCoupon = ({ cart, calculateCartTotal, addNotification }) => {
+  const [coupons, setCoupons] = useLocalStorage('coupons', initialCoupons);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+
+  const applyCoupon = useCallback(
+    coupon => {
+      const currentTotal = calculateCartTotal(cart, null).totalAfterDiscount;
+      const result = couponService.validateCouponApplication(
+        coupon,
+        currentTotal
+      );
+
+      if (!result.isValid) {
+        addNotification(result.message, 'error');
+        return;
+      }
+
+      setSelectedCoupon(coupon);
+      addNotification(result.message, 'success');
+    },
+    [cart, calculateCartTotal, addNotification]
+  );
+
+  return {
+    coupons,
+    selectedCoupon,
+    applyCoupon,
+    addCoupon,
+    removeCoupon,
+    clearSelectedCoupon,
+  };
+};
+```
+
+**3. App.tsx 수정**
+
+- selectedCoupon 중복 상태 제거
+- 쿠폰 관련 함수들을 Hook에서 가져오도록 변경
+- 의존성 주입 패턴 적용
+
+#### 해결된 문제
+
+- **중복 상태 관리**: selectedCoupon이 App.tsx와 Hook에서 동시 관리되던 문제 해결
+- **테스트 에러**: "쿠폰을 선택하고 적용할 수 있다" 테스트 통과
+- **비즈니스 로직 분리**: 순수한 도메인 로직을 서비스로 분리하여 테스트 용이성 확보
+
+#### 아키텍처 개선
+
+App.tsx (UI)
+↓ 의존성 주입
+useCoupon Hook (상태 관리)
+↓ 비즈니스 로직 호출
+couponService (도메인 로직)
+
+### 🕐 완료 및 문서화
+
+#### 완료된 Hook 목록
+
+1. **useLocalStorage**: localStorage 관리 (70% 코드 중복 제거)
+2. **useNotifications**: 알림 시스템 캡슐화
+3. **useDebounce**: 검색 성능 최적화 (80% 연산 감소)
+4. **useCoupon**: 쿠폰 도메인 로직 + 상태 관리
+
+#### 핵심 성과
+
+- **관심사 분리**: 각 Hook이 단일 책임 원칙 준수
+- **의존성 역전**: Hook이 외부 의존성을 주입받아 결합도 감소
+- **테스트 용이성**: 도메인 로직과 React 상태 분리로 독립적 테스트 가능
+- **재사용성**: Hook들을 다른 컴포넌트에서 활용 가능
+
+#### 문서 작성
+
+- `docs/pr/basic/step2.md`: 상세한 Hook 분리 과정 및 설계 원칙 정리
+- 아키텍처 다이어그램 및 Before/After 코드 비교 포함
+
+---
+
+### 🎯 다음 단계 준비
+
+**5단계: useProducts Hook** (예정)
+
+- 상품 CRUD 로직 분리
+- 관리자 기능 캡슐화
+
+**6단계: useCart Hook** (예정)
+
+- 장바구니 상태 관리
+- 다른 Hook들과의 연동
+
+**목표**: App.tsx를 순수한 UI 컴포넌트로 만들어 완전한 관심사 분리 달성

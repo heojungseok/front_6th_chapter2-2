@@ -165,3 +165,179 @@ const debouncedSearchTerm = useDebounce(searchTerm, 500);
 2. **React 함수형 업데이트**: `prevValue`를 통한 안전한 상태 관리
 3. **디바운스 패턴**: 성능 최적화의 핵심 기법
 4. **점진적 리팩토링**: 작은 단위로 안전하게 개선
+
+# Step 2: Custom Hook 분리 (완료)
+
+## 🎯 목표
+
+App.tsx의 상태 관리 로직을 재사용 가능한 Hook으로 분리하여 단일 책임 원칙 적용
+
+## 📋 완료된 Hook들
+
+### 1. useLocalStorage Hook ⭐
+
+**역할**: localStorage 관리 로직 통합 및 중복 제거
+
+**Before (문제점)**:
+
+```typescript
+// 3번 반복되는 패턴 (products, cart, coupons)
+const [products, setProducts] = useState(() => {
+  const saved = localStorage.getItem('products');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return initialProducts;
+    }
+  }
+  return initialProducts;
+});
+
+// 별도 useEffect로 저장
+useEffect(() => {
+  localStorage.setItem('products', JSON.stringify(products));
+}, [products]);
+```
+
+**After (해결)**:
+
+```typescript
+// 간단하고 재사용 가능
+const [products, setProducts] = useLocalStorage('products', initialProducts);
+```
+
+**핵심 기능**:
+
+- React 함수형 상태 업데이트 적용 (`prevValue` 사용)
+- 에러 처리 및 타입 안정성 확보
+- 자동 JSON 직렬화/역직렬화
+
+### 2. useNotifications Hook ⭐⭐
+
+**역할**: 알림 시스템 캡슐화 및 독립적 관리
+
+**주요 기능**:
+
+```typescript
+const { notifications, addNotification, removeNotification } =
+  useNotifications();
+
+// 자동 3초 후 제거
+addNotification('쿠폰이 적용되었습니다', 'success');
+// 수동 제거
+removeNotification(notificationId);
+```
+
+**개선점**:
+
+- 알림 로직이 독립적으로 분리됨
+- 타입별 알림 처리 (`error`, `success`, `warning`)
+- 자동 제거 타이머 관리
+
+### 3. useDebounce Hook ⭐⭐⭐
+
+**역할**: 검색 성능 최적화 (입력 지연 처리)
+
+**성능 개선**:
+
+```typescript
+// Before: 매 입력마다 검색 실행
+onChange={e => setSearchTerm(e.target.value)}  // 5회 검색
+
+// After: 500ms 지연 후 1회만 실행
+const debouncedSearchTerm = useDebounce(searchTerm, 500);  // 1회 검색
+```
+
+**실제 효과**:
+
+- **연산량 80% 감소**: "상품1" 입력 시 5회 → 1회로 감소
+- **UX 개선**: 불필요한 깜빡임 제거
+- **서버 부하 감소**: API 호출 횟수 최소화
+
+### 4. useCoupon Hook ⭐⭐⭐⭐ (도메인 서비스 패턴)
+
+**역할**: 쿠폰 상태 관리 + 비즈니스 로직 조합
+
+**아키텍처**:
+
+```typescript
+// Hook: React 상태 + 비즈니스 로직 조합
+const { coupons, selectedCoupon, applyCoupon, addCoupon, deleteCoupon } =
+  useCoupon({ cart, calculateCartTotal, addNotification });
+
+// Service: 순수 비즈니스 로직
+couponService.validateCouponApplication(coupon, cartTotal);
+couponService.checkDuplicateCoupon(newCoupon, existingCoupons);
+```
+
+**주요 기능**:
+
+- **쿠폰 적용 검증**: 10,000원 이상, percentage 타입 제한
+- **중복 코드 검증**: 동일한 쿠폰 코드 방지
+- **상태 동기화**: 쿠폰 삭제 시 선택된 쿠폰 자동 해제
+- **의존성 주입**: 외부 함수들을 매개변수로 받아 결합도 감소
+
+## 🏗️ 전체 아키텍처 구조
+
+```
+┌─────────────────────────────────────────┐
+│             App.tsx (UI Layer)          │
+│  • UI 렌더링 + 이벤트 처리               │
+│  • Hook들 조합 및 의존성 주입            │
+└─────────────────┬───────────────────────┘
+                  │ 상태 관리 위임
+┌─────────────────▼───────────────────────┐
+│          Hook Layer (상태 관리)          │
+│  • useLocalStorage, useNotifications    │
+│  • useDebounce, useCoupon               │
+│  • React 상태 + 비즈니스 로직 조합       │
+└─────────────────┬───────────────────────┘
+                  │ 비즈니스 로직 호출
+┌─────────────────▼───────────────────────┐
+│        Service Layer (도메인 로직)       │
+│  • couponService                        │
+│  • 순수한 비즈니스 규칙 + 검증 로직      │
+└─────────────────┬───────────────────────┘
+                  │ 유틸리티 호출
+┌─────────────────▼───────────────────────┐
+│         Utils Layer (순수 함수)         │
+│  • calculators, formatters              │
+│  • 계산, 포맷팅, 필터링 등               │
+└─────────────────────────────────────────┘
+```
+
+## 🔧 핵심 설계 원칙
+
+### 1. **의존성 역전 (Dependency Inversion)**
+
+```typescript
+// Hook이 외부 의존성을 주입받아 결합도 감소
+useCoupon({ cart, calculateCartTotal, addNotification });
+```
+
+### 2. **관심사 분리 (Separation of Concerns)**
+
+- **App.tsx**: UI 렌더링 + 이벤트 처리만 담당
+- **Hook**: 상태 관리 + 외부 서비스 조합
+- **Service**: 순수한 도메인 비즈니스 로직
+- **Utils**: 계산, 포맷팅 등 순수 함수
+
+### 3. **단일 책임 원칙 (Single Responsibility)**
+
+- 각 Hook이 하나의 도메인 영역만 담당
+- 쿠폰 관련 모든 로직이 `useCoupon` + `couponService`에 집중
+- localStorage 관리는 `useLocalStorage`만 담당
+
+### 4. **테스트 용이성**
+
+```typescript
+// Service: 완전히 독립적 테스트 가능
+expect(couponService.validateCouponApplication(coupon, 5000)).toEqual({
+  isValid: false,
+  message: '...',
+});
+
+// Hook: 모킹된 의존성으로 테스트
+const mockProps = { cart: [], calculateCartTotal: jest.fn() };
+```
