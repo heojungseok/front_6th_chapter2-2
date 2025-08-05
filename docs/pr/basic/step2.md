@@ -521,3 +521,121 @@ App.tsx (UI)
 useProducts Hook (상태 관리)
 ↓ 비즈니스 로직 호출
 productService (도메인 로직)
+
+## �� 학습 포인트: 의존성 주입과 인터페이스
+
+### 1. 의존성 주입 (Dependency Injection)
+
+**정의**: 외부에서 필요한 의존성(객체, 함수 등)을 주입받아 사용하는 패턴
+
+**비유**: 피자 가게가 밀가루, 치즈, 소스를 외부에서 받아와서 사용하는 것
+
+```typescript
+// ❌ 강한 결합 (직접 생성)
+const useCart = () => {
+  const addNotification = () => { /* 알림 로직 */ };  // Hook 내부에서 직접 구현
+};
+
+// ✅ 느슨한 결합 (의존성 주입)
+interface UseCartProps {
+  addNotification: (message: string, type: string) => void;  // 외부에서 주입받음
+}
+const useCart = ({ addNotification }: UseCartProps) => {
+  // 외부에서 주입받은 함수 사용
+};
+```
+
+**장점**:
+- 결합도 감소
+- 테스트 용이성 (모킹 가능)
+- 재사용성 향상
+
+### 2. 인터페이스의 필요성
+
+**정의**: TypeScript에게 "이 함수는 이런 타입의 파라미터가 필요해"라고 알려주는 계약서
+
+**비유**: 계약서 없이는 어떤 재료가 필요한지 모르는 것
+
+```typescript
+// ❌ 인터페이스 없이
+const useCart = ({ products, addNotification }) => {
+  // TypeScript가 타입을 모름 → 컴파일 에러, 자동완성 불가
+};
+
+// ✅ 인터페이스 있이
+interface UseCartProps {
+  products: ProductWithUI[];
+  addNotification: (message: string, type: string) => void;
+}
+const useCart = ({ products, addNotification }: UseCartProps) => {
+  // TypeScript가 정확한 타입을 앎 → 타입 안전성, 자동완성 가능
+};
+```
+
+**장점**:
+- 타입 안전성 (잘못된 타입 사용 시 컴파일 에러)
+- IDE 자동완성
+- 코드 문서화 효과
+
+### 6단계: useCart Hook 분리 (도메인 서비스 패턴)
+
+#### 목적
+장바구니 상태 관리 로직과 비즈니스 로직 분리
+
+#### 도메인 서비스 패턴 적용
+
+**cartService (순수 비즈니스 로직)**
+```typescript
+export const cartService = {
+  addItemToCart: (product, cart) => { /* 장바구니 추가 로직 */ },
+  removeItemFromCart: (productId, cart) => { /* 장바구니 제거 로직 */ },
+  updateItemQuantity: (productId, newQuantity, cart) => { /* 수량 업데이트 로직 */ },
+  calculateTotalItemCount: (cart) => { /* 총 개수 계산 */ },
+};
+```
+
+**validators (순수 검증 로직)**
+```typescript
+export const validateCartOperation = {
+  validateStockAvailability: (product, cart) => { /* 재고 검증 */ },
+  validateQuantityIncrease: (product, currentQuantity) => { /* 수량 증가 검증 */ },
+  validateQuantityChange: (product, newQuantity) => { /* 수량 변경 검증 */ },
+};
+```
+
+**useCart Hook (상태 관리 + 서비스 조합)**
+```typescript
+export const useCart = ({ products, addNotification }) => {
+  const [cart, setCart] = useLocalStorage('cart', []);
+  const [totalItemCount, setTotalItemCount] = useState(0);
+
+  const addToCart = useCallback((product) => {
+    // 1. 검증
+    const stockValidation = validateCartOperation.validateStockAvailability(product, cart);
+    if (!stockValidation.isValid) {
+      addNotification(stockValidation.message, 'error');
+      return;
+    }
+    
+    // 2. 비즈니스 로직
+    const newCart = cartService.addItemToCart(product, cart);
+    setCart(newCart);
+    addNotification('장바구니에 담았습니다', 'success');
+  }, [cart, addNotification]);
+
+  return { cart, totalItemCount, addToCart, removeFromCart, updateQuantity, completeOrder };
+};
+```
+
+#### 핵심 성과
+- **비즈니스 로직 분리**: 순수한 장바구니 조작 로직을 cartService로 분리
+- **검증 로직 분리**: 재사용 가능한 검증 함수들을 validators로 분리
+- **상태 관리 캡슐화**: 장바구니 관련 모든 상태를 useCart Hook에서 관리
+- **테스트 용이성**: 순수 함수들로 독립적 테스트 가능
+
+#### 아키텍처 개선
+App.tsx (UI)
+↓ 의존성 주입
+useCart Hook (상태 관리 + 조합)
+↓ 검증 + 비즈니스 로직 호출
+validators + cartService (순수 함수들)

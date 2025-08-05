@@ -617,17 +617,101 @@ productService (도메인 로직)
 
 ---
 
+### 🕐 6단계: useCart Hook 분리 (도메인 서비스 패턴)
+
+#### 작업 배경
+장바구니 관련 로직이 App.tsx에 흩어져 있어 관심사 분리 필요
+
+- 장바구니 조작 함수들이 App.tsx에 분산
+- 비즈니스 로직(재고 검증, 수량 관리)이 컴포넌트에 하드코딩
+- 장바구니 상태 관리의 복잡성
+
+#### 도메인 서비스 패턴 적용
+
+**1. cartService 생성 (services/cartService.ts)**
+```typescript
+export const cartService = {
+  addItemToCart: (product, cart) => { /* 장바구니 추가 로직 */ },
+  removeItemFromCart: (productId, cart) => { /* 장바구니 제거 로직 */ },
+  updateItemQuantity: (productId, newQuantity, cart) => { /* 수량 업데이트 로직 */ },
+  calculateTotalItemCount: (cart) => { /* 총 개수 계산 */ },
+};
+```
+
+**2. validators에 검증 로직 추가 (utils/validators.ts)**
+```typescript
+export const validateCartOperation = {
+  validateStockAvailability: (product, cart) => { /* 재고 검증 */ },
+  validateQuantityIncrease: (product, currentQuantity) => { /* 수량 증가 검증 */ },
+  validateQuantityChange: (product, newQuantity) => { /* 수량 변경 검증 */ },
+};
+```
+
+**3. useCart Hook 생성 (hooks/useCart.ts)**
+```typescript
+export const useCart = ({ products, addNotification }) => {
+  const [cart, setCart] = useLocalStorage('cart', []);
+  const [totalItemCount, setTotalItemCount] = useState(0);
+
+  const addToCart = useCallback((product) => {
+    // 검증 → 비즈니스 로직 → 상태 업데이트 순서
+    const stockValidation = validateCartOperation.validateStockAvailability(product, cart);
+    if (!stockValidation.isValid) {
+      addNotification(stockValidation.message, 'error');
+      return;
+    }
+    
+    const newCart = cartService.addItemToCart(product, cart);
+    setCart(newCart);
+    addNotification('장바구니에 담았습니다', 'success');
+  }, [cart, addNotification]);
+
+  return { cart, totalItemCount, addToCart, removeFromCart, updateQuantity, completeOrder };
+};
+```
+
+#### 해결된 문제
+- **복잡한 로직 분리**: 30줄의 복잡한 로직을 검증/비즈니스/상태 관리로 분리
+- **재사용성 향상**: 순수 함수들로 다른 컴포넌트에서도 활용 가능
+- **테스트 용이성**: 각 함수별 독립적 테스트 가능
+- **가독성 개선**: Hook 내부가 훨씬 깔끔해짐
+
+#### 아키텍처 개선
+App.tsx (UI)
+↓ 의존성 주입
+useCart Hook (상태 관리 + 조합)
+↓ 검증 + 비즈니스 로직 호출
+validators + cartService (순수 함수들)
+
+### �� 완료 및 문서화
+
+#### 완료된 Hook 목록
+1. **useLocalStorage**: localStorage 관리 (70% 코드 중복 제거)
+2. **useNotifications**: 알림 시스템 캡슐화
+3. **useDebounce**: 검색 성능 최적화 (80% 연산 감소)
+4. **useCoupon**: 쿠폰 도메인 로직 + 상태 관리
+5. **useProducts**: 상품 CRUD 로직 + 상태 관리
+6. **useCart**: 장바구니 비즈니스 로직 + 상태 관리
+
+#### 핵심 성과
+- **완전한 관심사 분리**: 각 Hook이 단일 책임 원칙 준수
+- **도메인 서비스 패턴**: 순수한 비즈니스 로직과 검증 로직 분리
+- **의존성 역전**: Hook이 외부 의존성을 주입받아 결합도 감소
+- **테스트 용이성**: 순수 함수들로 독립적 테스트 가능
+- **재사용성**: Hook들을 다른 컴포넌트에서 활용 가능
+
+#### 학습 포인트
+**도메인 서비스 패턴에서 배운 것**:
+- **검증과 비즈니스 로직 분리**: 순수 함수로 재사용성 향상
+- **단계별 처리**: 검증 → 비즈니스 로직 → 상태 업데이트 순서
+- **의존성 주입**: 외부 함수들을 매개변수로 받아 결합도 감소
+
+---
+
 ### 🎯 다음 단계 준비
+**7단계: App.tsx 최종 정리** (예정)
+- useCart Hook 적용
+- App.tsx를 순수한 UI 컴포넌트로 만들기
+- 완전한 관심사 분리 달성
 
-**6단계: useCart Hook** (예정)
-
-- 장바구니 상태 관리
-- 다른 Hook들과의 연동
-
-**목표**: App.tsx를 순수한 UI 컴포넌트로 만들어 완전한 관심사 분리 달성
-
-**예상 도전 과제**:
-
-- 장바구니와 상품/쿠폰 Hook 간의 복잡한 의존성 관리
-- 성능 최적화 (불필요한 리렌더링 방지)
-- 테스트 케이스 확장 및 안정성 확보
+**목표**: App.tsx에서 모든 비즈니스 로직 제거하고 UI 렌더링에만 집중
