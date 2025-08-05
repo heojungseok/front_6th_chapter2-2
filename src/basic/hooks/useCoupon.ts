@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { CartItem, Coupon } from '../../types';
+import { CartItem, Coupon } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 import { couponService } from '../services/couponService';
 

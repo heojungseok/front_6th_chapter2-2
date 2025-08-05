@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { CartItem, Coupon } from '../types';
+import { CartItem } from './types';
 import {
   calculateCartTotal,
   calculateItemTotal,
@@ -8,11 +8,13 @@ import {
 import { formatPrice } from './utils/formatters';
 import { generateOrderNumber } from './utils/generators';
 import { filterProducts } from './utils/filters';
-import { ProductWithUI, ProductForm, CouponForm } from './types';
+import { ProductWithUI, CouponForm } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useNotifications } from './hooks/useNotifications';
 import { useDebounce } from './hooks/useDebounce';
 import { useCoupon } from './hooks/useCoupon';
+import { useProducts } from './hooks/useProducts';
+import { productService } from './services/productService';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -50,16 +52,26 @@ const initialProducts: ProductWithUI[] = [
 ];
 
 const App = () => {
-  const [products, setProducts] = useLocalStorage<ProductWithUI[]>(
-    'products',
-    initialProducts
-  );
-
+  const { notifications, addNotification, removeNotification } =
+    useNotifications();
+  const {
+    products,
+    editingProduct,
+    productForm,
+    showProductForm,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    startEditProduct,
+    resetProductForm,
+    setProductForm,
+    setEditingProduct,
+    setShowProductForm,
+  } = useProducts({ addNotification, initialProducts });
   const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
 
   const [isAdmin, setIsAdmin] = useState(false);
-  const { notifications, addNotification, removeNotification } =
-    useNotifications();
+
   const [showCouponForm, setShowCouponForm] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
     'products'
@@ -74,19 +86,8 @@ const App = () => {
     applyCoupon,
   } = useCoupon({ cart, calculateCartTotal, addNotification });
 
-  const [showProductForm, setShowProductForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
-  // Admin
-  const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [productForm, setProductForm] = useState<ProductForm>({
-    name: '',
-    price: 0,
-    stock: 0,
-    description: '',
-    discounts: [] as Array<{ quantity: number; rate: number }>,
-  });
 
   const [couponForm, setCouponForm] = useState<CouponForm>({
     name: '',
@@ -182,65 +183,15 @@ const App = () => {
     clearSelectedCoupon(); // Hook의 함수 사용
   }, [addNotification]);
 
-  const addProduct = useCallback(
-    (newProduct: Omit<ProductWithUI, 'id'>) => {
-      const product: ProductWithUI = {
-        ...newProduct,
-        id: `p${Date.now()}`,
-      };
-      setProducts(prev => [...prev, product]);
-      addNotification('상품이 추가되었습니다.', 'success');
-    },
-    [addNotification]
-  );
-
-  const updateProduct = useCallback(
-    (productId: string, updates: Partial<ProductWithUI>) => {
-      setProducts(prev =>
-        prev.map(product =>
-          product.id === productId ? { ...product, ...updates } : product
-        )
-      );
-      addNotification('상품이 수정되었습니다.', 'success');
-    },
-    [addNotification]
-  );
-
-  const deleteProduct = useCallback(
-    (productId: string) => {
-      setProducts(prev => prev.filter(p => p.id !== productId));
-      addNotification('상품이 삭제되었습니다.', 'success');
-    },
-    [addNotification]
-  );
-
-  const deleteCoupon = useCallback(
-    (couponCode: string) => {
-      removeCoupon(couponCode);
-    },
-    [removeCoupon]
-  );
-
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingProduct && editingProduct !== 'new') {
       updateProduct(editingProduct, productForm);
-      setEditingProduct(null);
     } else {
-      addProduct({
-        ...productForm,
-        discounts: productForm.discounts,
-      });
+      addProduct(productForm);
     }
-    setProductForm({
-      name: '',
-      price: 0,
-      stock: 0,
-      description: '',
-      discounts: [],
-    });
-    setEditingProduct(null);
-    setShowProductForm(false);
+
+    resetProductForm();
   };
 
   const handleCouponSubmit = (e: React.FormEvent) => {
@@ -253,18 +204,6 @@ const App = () => {
       discountValue: 0,
     });
     setShowCouponForm(false);
-  };
-
-  const startEditProduct = (product: ProductWithUI) => {
-    setEditingProduct(product.id);
-    setProductForm({
-      name: product.name,
-      price: product.price,
-      stock: product.stock,
-      description: product.description || '',
-      discounts: product.discounts || [],
-    });
-    setShowProductForm(true);
   };
 
   const totals = calculateCartTotal(cart, selectedCoupon || null);
@@ -561,11 +500,18 @@ const App = () => {
                               if (value === '') {
                                 setProductForm({ ...productForm, price: 0 });
                               } else if (parseInt(value) < 0) {
-                                addNotification(
-                                  '가격은 0보다 커야 합니다',
-                                  'error'
-                                );
-                                setProductForm({ ...productForm, price: 0 });
+                                const validationResult =
+                                  productService.validatePrice(value);
+                                if (!validationResult.isValid) {
+                                  addNotification(
+                                    validationResult.message,
+                                    'error'
+                                  );
+                                  setProductForm({
+                                    ...productForm,
+                                    price: validationResult.correctedValue || 0,
+                                  });
+                                }
                               }
                             }}
                             className='w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 border'
@@ -594,19 +540,20 @@ const App = () => {
                             onBlur={e => {
                               const value = e.target.value;
                               if (value === '') {
-                                setProductForm({ ...productForm, stock: 0 });
+                                setProductForm({ ...productForm, price: 0 });
                               } else if (parseInt(value) < 0) {
-                                addNotification(
-                                  '재고는 0보다 커야 합니다',
-                                  'error'
-                                );
-                                setProductForm({ ...productForm, stock: 0 });
-                              } else if (parseInt(value) > 9999) {
-                                addNotification(
-                                  '재고는 9999개를 초과할 수 없습니다',
-                                  'error'
-                                );
-                                setProductForm({ ...productForm, stock: 9999 });
+                                const validationResult =
+                                  productService.validateStock(value);
+                                if (!validationResult.isValid) {
+                                  addNotification(
+                                    validationResult.message,
+                                    'error'
+                                  );
+                                  setProductForm({
+                                    ...productForm,
+                                    price: validationResult.correctedValue || 0,
+                                  });
+                                }
                               }
                             }}
                             className='w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 border'
@@ -770,7 +717,7 @@ const App = () => {
                             </div>
                           </div>
                           <button
-                            onClick={() => deleteCoupon(coupon.code)}
+                            onClick={() => removeCoupon(coupon.code)}
                             className='text-gray-400 hover:text-red-600 transition-colors'
                           >
                             <svg
@@ -1236,7 +1183,7 @@ const App = () => {
                               c => c.code === e.target.value
                             );
                             if (coupon) applyCoupon(coupon);
-                            else setSelectedCoupon(null);
+                            else clearSelectedCoupon();
                           }}
                         >
                           <option value=''>쿠폰 선택</option>

@@ -15,7 +15,12 @@ export const useLocalStorage = <T>(
     try {
       const saved = localStorage.getItem(key);
       if (saved !== null) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // 빈 배열이나 잘못된 데이터인 경우 초기값 사용
+        if (Array.isArray(parsed) && parsed.length === 0) {
+          return initialValue;
+        }
+        return parsed;
       }
     } catch (error) {
       console.warn(`localStorage getItem 실패 (key: ${key}):`, error);
