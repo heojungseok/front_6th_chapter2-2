@@ -19,6 +19,7 @@ import { CartItem } from './components/cart';
 import { CartSidebar } from './components/cart';
 import { Header } from './components/layout';
 import { ProductList } from './components/product';
+import { CouponManagement } from './components/pages/admin';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -93,9 +94,9 @@ const App = () => {
   const {
     cart,
     onAddToCart,
-    updateQuantity,
+    onUpdateQuantity,
     onCompleteOrder,
-    removeFromCart,
+    onRemoveFromCart,
     totalItemCount,
     totals,
   } = useCart({
@@ -567,8 +568,8 @@ const App = () => {
                 coupons={coupons}
                 selectedCoupon={selectedCoupon}
                 totals={totals}
-                onUpdateQuantity={updateQuantity}
-                onRemoveFromCart={removeFromCart}
+                onUpdateQuantity={onUpdateQuantity}
+                onRemoveFromCart={onRemoveFromCart}
                 onApplyCoupon={onApplyCoupon}
                 onClearSelectedCoupon={onClearSelectedCoupon}
                 onCompleteOrder={onCompleteOrder}

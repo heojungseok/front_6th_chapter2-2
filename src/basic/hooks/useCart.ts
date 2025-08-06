@@ -90,7 +90,7 @@ export const useCart = ({
     [cart, addNotification]
   );
 
-  const removeFromCart = useCallback(
+  const onRemoveFromCart = useCallback(
     (productId: string) => {
       const newCart = cartService.removeItemFromCart(productId, cart);
       setCart(newCart);
@@ -98,7 +98,7 @@ export const useCart = ({
     [cart]
   );
 
-  const updateQuantity = useCallback(
+  const onUpdateQuantity = useCallback(
     (productId: string, newQuantity: number) => {
       const product = products.find(p => p.id === productId);
       if (!product) return;
@@ -110,7 +110,7 @@ export const useCart = ({
 
       if (!validation.isValid) {
         if (validation.action === 'remove') {
-          removeFromCart(productId);
+          onRemoveFromCart(productId);
           return;
         }
         addNotification(validation.message, 'error');
@@ -124,7 +124,7 @@ export const useCart = ({
       );
       setCart(newCart);
     },
-    [products, cart, removeFromCart, addNotification]
+    [products, cart, onRemoveFromCart, addNotification]
   );
 
   const onCompleteOrder = useCallback(() => {
@@ -141,8 +141,8 @@ export const useCart = ({
     totalItemCount,
     totals,
     onAddToCart,
-    removeFromCart,
-    updateQuantity,
+    onRemoveFromCart,
+    onUpdateQuantity,
     onCompleteOrder,
   };
 };
