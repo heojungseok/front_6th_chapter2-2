@@ -397,3 +397,116 @@ admin/
 
 **현재 상태**: CouponManagement 분리 완료 ✅  
 **다음 단계**: ProductManagement 분리 진행 예정 🚀
+
+# ProductManagement 분리 작업 내역 및 핵심 포인트
+
+## 🎯 작업 목적
+
+**ProductManagement 컴포넌트 분리**를 통해 Middle-Out 방식의 리팩토링을 계속 진행
+
+## 📋 분리된 컴포넌트 구조
+
+```
+
+ProductManagement (메인 컨테이너)
+├── ProductTable (상품 목록 테이블) - 80줄
+├── ProductForm (상품 추가/수정 폼) - 150줄 ⭐
+└── AddProductButton (새 상품 추가 버튼) - 10줄
+
+```
+
+## �� 핵심 작업 내용
+
+### **1. ProductForm 분리** (가장 중요)
+
+- **이유**: 150줄의 가장 복잡한 폼 로직
+- **포함 내용**: 상품명, 설명, 가격, 재고, 할인 정책 관리
+- **주의사항**: `productService.validatePrice/validateStock` 의존성 주입
+
+### **2. ProductTable 분리**
+
+- **이유**: 80줄의 테이블 렌더링 로직
+- **포함 내용**: 상품 목록 표시, 수정/삭제 버튼
+- **주의사항**: `formatPrice`, `getRemainingStock` 유틸리티 함수 사용
+
+### **3. AddProductButton 분리**
+
+- **이유**: 단순한 버튼 컴포넌트
+- **포함 내용**: 새 상품 추가 버튼
+
+## ⚠️ 분리 시 주의사항
+
+### **1. Import 경로 수정**
+
+```typescript
+// ❌ 잘못된 경로
+import { Button, Input } from '../../../../ui';
+
+// ✅ 올바른 경로
+import { Button, Input } from '../../../ui';
+```
+
+### **2. Props 타입 일치**
+
+```typescript
+// addNotification 타입 통일
+addNotification: (message: string, type: 'error' | 'success' | 'warning') => void
+```
+
+### **3. 이벤트 핸들러 중복 제거**
+
+- App.tsx의 `handleProductSubmit` → ProductManagement로 이동
+- 폼 상태 초기화 로직 통합
+
+## 🎯 분리의 필요성
+
+### **1. 복잡도 감소**
+
+- App.tsx: 586줄 → 400줄로 감소
+- 각 컴포넌트가 명확한 책임만 가짐
+
+### **2. 재사용성 향상**
+
+- ProductForm: 다른 곳에서도 상품 입력 폼으로 사용 가능
+- ProductTable: 상품 목록 표시용으로 재사용 가능
+
+### **3. 테스트 용이성**
+
+- 각 컴포넌트를 독립적으로 테스트 가능
+- Props 기반 테스트로 격리된 환경 구성
+
+## 📁 최종 파일 구조
+
+```
+src/basic/components/pages/admin/
+├── ProductManagement.tsx
+├── CouponManagement.tsx
+├── index.ts
+└── product/
+    ├── ProductTable.tsx
+    ├── ProductForm.tsx
+    ├── AddProductButton.tsx
+    └── index.ts
+```
+
+## �� 핵심 학습 포인트
+
+### **1. Middle-Out 방식의 효과**
+
+- 가장 복잡한 ProductForm부터 분리
+- 점진적으로 전체 복잡도 감소
+
+### **2. 도메인별 디렉토리 구조**
+
+- `product/`, `coupon/` 디렉토리로 관련 컴포넌트 그룹화
+- 확장성과 유지보수성 향상
+
+### **3. Props 전달 패턴**
+
+- 필요한 데이터와 함수만 전달
+- 컴포넌트 간 결합도 최소화
+
+---
+
+**결과**: ProductManagement 완전 분리 완료 ✅  
+**다음 단계**: AdminDashboardHeader 또는 AdminTabs 분리 예정 🚀
