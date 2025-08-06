@@ -13,6 +13,7 @@ import { useCart } from './hooks/useCart';
 import { useSearch } from './hooks/useSearch';
 import { useUIState } from './hooks/useUIStates';
 import { useCouponForm } from './hooks/useCouponForm';
+import { Button, Input, Notification } from './components/ui';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -54,7 +55,7 @@ const App = () => {
     useNotifications();
 
   const { searchTerm, setSearchTerm, debouncedSearchTerm } = useSearch();
-  
+
   const {
     coupons,
     addCoupon,
@@ -78,16 +79,35 @@ const App = () => {
     setProductForm,
     setEditingProduct,
     setShowProductForm,
-  } = useProducts({ addNotification, initialProducts, searchTerm: debouncedSearchTerm });
+  } = useProducts({
+    addNotification,
+    initialProducts,
+    searchTerm: debouncedSearchTerm,
+  });
 
-  const { cart, addToCart, updateQuantity, completeOrder, removeFromCart, totalItemCount, totals } = useCart({
+  const {
+    cart,
+    addToCart,
+    updateQuantity,
+    completeOrder,
+    removeFromCart,
+    totalItemCount,
+    totals,
+  } = useCart({
     products,
     selectedCoupon,
     addNotification,
   });
 
-  const { isAdmin, activeTab, showCouponForm, setIsAdmin, setActiveTab, setShowCouponForm } = useUIState();
-  
+  const {
+    isAdmin,
+    activeTab,
+    showCouponForm,
+    setIsAdmin,
+    setActiveTab,
+    setShowCouponForm,
+  } = useUIState();
+
   const { couponForm, setCouponForm } = useCouponForm();
 
   const handleProductSubmit = (e: React.FormEvent) => {
@@ -118,36 +138,12 @@ const App = () => {
       {notifications.length > 0 && (
         <div className='fixed top-20 right-4 z-50 space-y-2 max-w-sm'>
           {notifications.map(notif => (
-            <div
+            <Notification
               key={notif.id}
-              className={`p-4 rounded-md shadow-md text-white flex justify-between items-center ${
-                notif.type === 'error'
-                  ? 'bg-red-600'
-                  : notif.type === 'warning'
-                    ? 'bg-yellow-600'
-                    : 'bg-green-600'
-              }`}
-            >
-              <span className='mr-2'>{notif.message}</span>
-              <button
-                onClick={() => removeNotification(notif.id)}
-                className='text-white hover:text-gray-200'
-              >
-                <svg
-                  className='w-4 h-4'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M6 18L18 6M6 6l12 12'
-                  />
-                </svg>
-              </button>
-            </div>
+              message={notif.message}
+              type={notif.type}
+              onClose={() => removeNotification(notif.id)}
+            />
           ))}
         </div>
       )}
@@ -248,7 +244,7 @@ const App = () => {
                 <div className='p-6 border-b border-gray-200'>
                   <div className='flex justify-between items-center'>
                     <h2 className='text-lg font-semibold'>상품 목록</h2>
-                    <button
+                    <Button
                       onClick={() => {
                         setEditingProduct('new');
                         setProductForm({
@@ -260,10 +256,10 @@ const App = () => {
                         });
                         setShowProductForm(true);
                       }}
-                      className='px-4 py-2 bg-gray-900 text-white text-sm rounded-md hover:bg-gray-800'
+                      variant='gray'
                     >
                       새 상품 추가
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -348,36 +344,28 @@ const App = () => {
                       </h3>
                       <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                         <div>
-                          <label className='block text-sm font-medium text-gray-700 mb-1'>
-                            상품명
-                          </label>
-                          <input
-                            type='text'
+                          <Input
+                            label='상품명'
                             value={productForm.name}
-                            onChange={e =>
+                            onChange={value =>
                               setProductForm({
                                 ...productForm,
-                                name: e.target.value,
+                                name: value,
                               })
                             }
-                            className='w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 border'
                             required
                           />
                         </div>
                         <div>
-                          <label className='block text-sm font-medium text-gray-700 mb-1'>
-                            설명
-                          </label>
-                          <input
-                            type='text'
+                          <Input
+                            label='설명'
                             value={productForm.description}
-                            onChange={e =>
+                            onChange={value =>
                               setProductForm({
                                 ...productForm,
-                                description: e.target.value,
+                                description: value,
                               })
                             }
-                            className='w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 px-3 py-2 border'
                           />
                         </div>
                         <div>
@@ -563,7 +551,7 @@ const App = () => {
                       </div>
 
                       <div className='flex justify-end gap-3'>
-                        <button
+                        <Button
                           type='button'
                           onClick={() => {
                             setEditingProduct(null);
@@ -576,16 +564,13 @@ const App = () => {
                             });
                             setShowProductForm(false);
                           }}
-                          className='px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50'
+                          variant='secondary'
                         >
                           취소
-                        </button>
-                        <button
-                          type='submit'
-                          className='px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700'
-                        >
+                        </Button>
+                        <Button type='submit' variant='primary'>
                           {editingProduct === 'new' ? '추가' : '수정'}
-                        </button>
+                        </Button>
                       </div>
                     </form>
                   </div>
