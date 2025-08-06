@@ -15,7 +15,10 @@ interface CouponManagementProps {
   onAddCoupon: (coupon: Omit<Coupon, 'id'>) => void;
   setCouponForm: (form: any) => void;
   setShowCouponForm: (show: boolean) => void;
-  addNotification: (message: string, type: 'error' | 'success' | 'warning') => void;  // 타입 수정
+  addNotification: (
+    message: string,
+    type: 'error' | 'success' | 'warning'
+  ) => void; // 타입 수정
 }
 
 export const CouponManagement: React.FC<CouponManagementProps> = ({

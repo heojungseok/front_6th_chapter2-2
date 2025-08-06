@@ -10,7 +10,10 @@ interface CouponFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   setCouponForm: (form: any) => void;
-  addNotification: (message: string, type: 'error' | 'success' | 'warning') => void;  // 타입 수정
+  addNotification: (
+    message: string,
+    type: 'error' | 'success' | 'warning'
+  ) => void; // 타입 수정
 }
 
 export const CouponForm: React.FC<CouponFormProps> = ({
