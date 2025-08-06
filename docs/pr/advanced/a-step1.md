@@ -277,3 +277,106 @@ export const cartTotalsAtom = atom(get => {
 
 **전체 진행률**: 22% (2/9 단계 완료)
 **다음 단계로 진행할 준비가 완료되었습니다!**
+
+Ran tool
+Read file: docs/pr/advanced/a-step1.md
+
+# Jotai 핵심 정리
+
+## 🎯 Atom이란?
+
+**Jotai에서 상태를 저장하는 가장 작은 단위**
+
+- React의 `useState`와 비슷하지만 **전역에서 접근 가능**
+- `atom(initialValue)` 형태로 생성
+
+## �� Atoms의 3가지 역할
+
+### **1. 상태 저장 (기본 atom)**
+
+```typescript
+const isAdminAtom = atom(false);
+const productsAtom = atom([]);
+```
+
+**역할**: 데이터를 저장하는 "상자"
+
+### **2. 계산된 값 제공 (파생 atom)**
+
+```typescript
+const filteredProductsAtom = atom(get => {
+  const products = get(productsAtom);
+  const searchTerm = get(searchTermAtom);
+  return products.filter(p => p.name.includes(searchTerm));
+});
+```
+
+**역할**: "계산기" - 다른 데이터를 조합해서 새로운 값 제공
+
+### **3. 상태 변경 로직 캡슐화 (액션 atom)**
+
+```typescript
+const addToCartAtom = atom(
+  null, // 읽기 값
+  (get, set, product) => {
+    // 쓰기 함수
+    const cart = get(cartAtom);
+    const newCart = [...cart, product];
+    set(cartAtom, newCart);
+  }
+);
+```
+
+**역할**: "액션 실행기" - 상태를 변경하는 로직 담당
+
+## ��️ Jotai 내장 함수들
+
+### **`get` 함수**
+
+- **역할**: 다른 atom의 값을 읽어오는 함수
+- **특징**: 자동 의존성 추적, 타입 안전성
+
+### **`set` 함수**
+
+- **역할**: 다른 atom의 값을 변경하는 함수
+- **특징**: 원자적 업데이트, 자동 리렌더링
+
+### **React Hooks**
+
+```typescript
+const [value, setValue] = useAtom(atom); // 읽기/쓰기
+const value = useAtomValue(atom); // 읽기만
+const setValue = useSetAtom(atom); // 쓰기만
+```
+
+## ⚡ 핵심 장점
+
+### **자동 동기화**
+
+```typescript
+// searchTerm이 변경되면 자동으로 filteredProducts도 업데이트
+const filteredProductsAtom = atom(get => {
+  const products = get(productsAtom);
+  const searchTerm = get(searchTermAtom); // 의존성
+  return products.filter(p => p.name.includes(searchTerm));
+});
+```
+
+### **Props Drilling 해결**
+
+```typescript
+// Before: props로 전달
+<ProductList products={filteredProducts} />
+
+// After: 직접 구독
+const ProductList = () => {
+  const filteredProducts = useAtomValue(filteredProductsAtom);
+  return <div>{/* 렌더링 */}</div>;
+};
+```
+
+## 💡 핵심 포인트
+
+- **`get`**: "이 atom의 값을 읽어줘, 변경되면 나도 다시 계산할게"
+- **`set`**: "이 atom의 값을 변경해줘, 구독하는 모든 컴포넌트를 업데이트해줘"
+- **자동 의존성 관리**: React의 useEffect와 달리 수동으로 의존성 배열 관리 불필요
