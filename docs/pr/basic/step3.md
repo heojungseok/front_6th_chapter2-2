@@ -320,3 +320,200 @@ src/basic/
 2. **Input 컴포넌트** 생성
 3. **Notification 컴포넌트** 생성
 4. App.tsx에서 기존 UI 요소들을 새 컴포넌트로 교체
+
+UI 컴포넌트와 Entity 컴포넌트의 차이점을 명확하게 설명해드리겠습니다.
+
+## �� 핵심 차이점
+
+### **UI 컴포넌트 (UI Components)**
+
+**정의**: 순수한 시각적 표현과 사용자 상호작용만 담당하는 컴포넌트
+
+**특징**:
+
+- **비즈니스 로직 없음**: 데이터를 받아서 표시만 함
+- **재사용성 높음**: 다양한 상황에서 사용 가능
+- **Props 기반**: 외부에서 모든 데이터와 이벤트를 받음
+- **도메인 독립적**: 특정 비즈니스 영역에 종속되지 않음
+
+### **Entity 컴포넌트 (Entity Components)**
+
+**정의**: 특정 비즈니스 엔티티(도메인 객체)를 다루는 컴포넌트
+
+**특징**:
+
+- **비즈니스 로직 포함**: 도메인 규칙과 로직을 가짐
+- **도메인 종속적**: 특정 비즈니스 영역에 특화됨
+- **상태 관리**: 엔티티 관련 상태를 관리
+- **재사용성 제한적**: 해당 도메인 내에서만 사용
+
+## �� 실제 예시 비교
+
+### **UI 컴포넌트 예시**
+
+```typescript
+// Button.tsx - UI 컴포넌트
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'danger';
+  className?: string;
+}
+
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  onClick,
+  disabled,
+  variant = 'primary',
+  className = ''
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`btn btn-${variant} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+```
+
+**UI 컴포넌트의 특징**:
+
+- ✅ **순수한 렌더링**: 클릭 이벤트만 전달받아 처리
+- ✅ **도메인 독립적**: 쇼핑몰, 블로그, 게시판 어디서든 사용 가능
+- ✅ **재사용성**: `onClick`에 어떤 로직이 들어가든 상관없음
+- ✅ **단순한 책임**: 버튼 스타일링과 클릭 이벤트만 담당
+
+### **Entity 컴포넌트 예시**
+
+```typescript
+// ProductCard.tsx - Entity 컴포넌트
+interface ProductCardProps {
+  product: ProductWithUI;
+  onAddToCart: (product: ProductWithUI) => void;
+  getRemainingStock: (product: ProductWithUI) => number;
+  formatPrice: (price: number, productId?: string) => string;
+  isAdmin?: boolean;
+}
+
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  onAddToCart,
+  getRemainingStock,
+  formatPrice,
+  isAdmin
+}) => {
+  const remainingStock = getRemainingStock(product);
+  const maxDiscount = getMaxApplicableDiscount(product.discounts);
+
+  return (
+    <div className="product-card">
+      <h3>{product.name}</h3>
+      <p>{formatPrice(product.price, product.id)}</p>
+
+      {/* 비즈니스 로직 포함 */}
+      {maxDiscount > 0 && (
+        <span className="discount-badge">
+          최대 {maxDiscount * 100}% 할인
+        </span>
+      )}
+
+      {remainingStock <= 0 ? (
+        <Button disabled>품절</Button>
+      ) : (
+        <Button onClick={() => onAddToCart(product)}>
+          장바구니 담기
+        </Button>
+      )}
+    </div>
+  );
+};
+```
+
+**Entity 컴포넌트의 특징**:
+
+- ✅ **비즈니스 로직 포함**: 할인 계산, 재고 확인 등
+- ✅ **도메인 종속적**: 쇼핑몰의 상품 카드라는 특정 목적
+- ✅ **복잡한 책임**: 상품 표시 + 할인 계산 + 재고 관리 + 장바구니 추가
+- ✅ **재사용성 제한적**: 다른 도메인에서는 사용하기 어려움
+
+## 🔄 계층 구조에서의 역할
+
+### **UI 컴포넌트 계층**
+
+```
+Button, Input, Notification, Modal, Dropdown
+├── 순수한 시각적 표현
+├── 사용자 상호작용 처리
+└── 도메인 독립적
+```
+
+### **Entity 컴포넌트 계층**
+
+```
+ProductCard, CartItem, CouponCard, OrderSummary
+├── 비즈니스 로직 포함
+├── 도메인 규칙 적용
+└── 특정 엔티티에 특화
+```
+
+## �� 분리 기준
+
+### **UI 컴포넌트로 분리하는 경우**
+
+```typescript
+// ✅ UI 컴포넌트 - 재사용 가능
+<Button variant="primary" onClick={handleClick}>
+  장바구니 담기
+</Button>
+
+<Input
+  value={productName}
+  onChange={setProductName}
+  placeholder="상품명을 입력하세요"
+/>
+```
+
+### **Entity 컴포넌트로 분리하는 경우**
+
+```typescript
+// ✅ Entity 컴포넌트 - 비즈니스 로직 포함
+<ProductCard
+  product={product}
+  onAddToCart={addToCart}
+  getRemainingStock={getRemainingStock}
+/>
+
+<CartItem
+  item={cartItem}
+  onUpdateQuantity={updateQuantity}
+  onRemove={removeFromCart}
+/>
+```
+
+## �� 실무에서의 활용
+
+### **UI 컴포넌트 라이브러리**
+
+```typescript
+// 모든 프로젝트에서 재사용 가능
+import { Button, Input, Modal } from '@company/ui-library';
+```
+
+### **Entity 컴포넌트 재사용**
+
+```typescript
+// 같은 도메인 내에서만 재사용
+import { ProductCard } from '@/components/shopping/product';
+import { CartItem } from '@/components/shopping/cart';
+```
+
+## �� 핵심 포인트
+
+1. **UI 컴포넌트**: "어떻게 보여줄까?" (How to display)
+2. **Entity 컴포넌트**: "무엇을 보여줄까?" (What to display)
+
+이러한 분리를 통해 **재사용성**과 **유지보수성**을 모두 확보할 수 있습니다!
