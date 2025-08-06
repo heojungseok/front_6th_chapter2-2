@@ -1,31 +1,15 @@
-import {
-  calculateCartTotal,
-  calculateItemTotal,
-  getRemainingStock,
-} from './utils/calculators';
-import { formatPrice } from './utils/formatters';
+import { calculateCartTotal } from './utils/calculators';
 import { ProductWithUI } from './types';
 import { useNotifications } from './hooks/useNotifications';
 import { useCoupon } from './hooks/useCoupon';
 import { useProducts } from './hooks/useProducts';
-import { productService } from './services/productService';
 import { useCart } from './hooks/useCart';
 import { useSearch } from './hooks/useSearch';
 import { useUIState } from './hooks/useUIStates';
 import { useCouponForm } from './hooks/useCouponForm';
-import { Button, Input, Notification } from './components/ui';
-import { ProductCard } from './components/pages/shopping/product';
-import { CartItem } from './components/pages/shopping/cart';
-import { CartSidebar } from './components/pages/shopping/cart';
+import { Notification } from './components/ui';
 import { Header } from './components/layout';
-import { ProductList } from './components/pages/shopping/product';
-import {
-  CouponManagement,
-  ProductManagement,
-  AdminHeader,
-  AdminPage,
-} from './components/pages/admin';
-import { ShoppingPage } from './components/pages';
+import { AdminPage, ShoppingPage } from './components/pages';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -87,7 +71,6 @@ const App = () => {
     onUpdateProduct,
     onDeleteProduct,
     onStartEditProduct,
-    resetProductForm,
     setProductForm,
     setEditingProduct,
     setShowProductForm,
@@ -115,36 +98,12 @@ const App = () => {
     isAdmin,
     activeTab,
     showCouponForm,
-    setIsAdmin,
     onSetActiveTab,
     setShowCouponForm,
     onToggleAdmin,
   } = useUIState();
 
   const { couponForm, setCouponForm } = useCouponForm();
-
-  const handleProductSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingProduct && editingProduct !== 'new') {
-      onUpdateProduct(editingProduct, productForm);
-    } else {
-      onAddProduct(productForm);
-    }
-
-    resetProductForm();
-  };
-
-  const handleCouponSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAddCoupon(couponForm);
-    setCouponForm({
-      name: '',
-      code: '',
-      discountType: 'amount',
-      discountValue: 0,
-    });
-    setShowCouponForm(false);
-  };
 
   return (
     <div className='min-h-screen bg-gray-50'>
