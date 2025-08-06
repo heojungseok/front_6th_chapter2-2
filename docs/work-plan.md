@@ -476,7 +476,7 @@ export const ShoppingPage = () => {
 };
 ```
 
-## 최종 파일 구조
+## 최종 파일 구조 (예상)
 
 ```
 src/basic/
@@ -502,6 +502,77 @@ src/basic/
 │   ├── formatters.ts
 │   └── validators.ts
 └── App.tsx
+```
+
+## 최종 파일 구조 (실제)
+
+```
+src/basic/
+├── App.tsx                           # 메인 앱 컴포넌트 (182줄)
+├── main.tsx                          # 앱 진입점
+├── types.ts                          # 타입 정의
+├── __tests__/                        # 테스트 파일들
+├── components/                       # 컴포넌트 계층
+│   ├── ui/                          # UI 컴포넌트 (재사용 가능)
+│   │   ├── Button.tsx
+│   │   ├── Input.tsx
+│   │   ├── Notification.tsx
+│   │   └── index.ts
+│   ├── layout/                      # 레이아웃 컴포넌트
+│   │   ├── Header.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── Navigation.tsx
+│   │   ├── CartIcon.tsx
+│   │   └── index.ts
+│   └── pages/                       # 페이지 컴포넌트
+│       ├── index.ts
+│       ├── shopping/                # 쇼핑 페이지 도메인
+│       │   ├── ShoppingPage.tsx
+│       │   ├── index.ts
+│       │   ├── product/             # 쇼핑용 상품 컴포넌트
+│       │   │   ├── ProductCard.tsx
+│       │   │   ├── ProductList.tsx
+│       │   │   └── index.ts
+│       │   └── cart/                # 쇼핑용 장바구니 컴포넌트
+│       │       ├── CartItem.tsx
+│       │       ├── CartSidebar.tsx
+│       │       └── index.ts
+│       └── admin/                   # 관리자 페이지 도메인
+│           ├── AdminPage.tsx
+│           ├── AdminHeader.tsx
+│           ├── ProductManagement.tsx
+│           ├── CouponManagement.tsx
+│           ├── index.ts
+│           ├── product/             # 관리자용 상품 컴포넌트
+│           │   ├── ProductForm.tsx
+│           │   ├── ProductTable.tsx
+│           │   ├── AddProductButton.tsx
+│           │   └── index.ts
+│           └── coupon/              # 관리자용 쿠폰 컴포넌트
+│               ├── CouponCard.tsx
+│               ├── CouponForm.tsx
+│               ├── AddCouponButton.tsx
+│               └── index.ts
+├── hooks/                           # Custom Hooks (9개)
+│   ├── useLocalStorage.ts
+│   ├── useNotifications.ts
+│   ├── useDebounce.ts
+│   ├── useSearch.ts
+│   ├── useCoupon.ts
+│   ├── useProducts.ts
+│   ├── useCart.ts
+│   ├── useUIStates.ts
+│   └── useCouponForm.ts
+├── services/                        # 도메인 서비스 (3개)
+│   ├── productService.ts
+│   ├── cartService.ts
+│   └── couponService.ts
+└── utils/                          # 유틸리티 함수들
+    ├── calculators.ts
+    ├── formatters.ts
+    ├── validators.ts
+    ├── filters.ts
+    └── generators.ts
 ```
 
 ## 요구사항 체크리스트
