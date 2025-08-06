@@ -38,13 +38,13 @@ interface UseCouponsProps {
 
 /**
  * 쿠폰 상태를 관리하는 커스텀 Hook
- * 
+ *
  * 기능:
  * - 쿠폰 목록 관리
  * - 선택된 쿠폰 관리
  * - 쿠폰 적용 및 추가
  * - 쿠폰 삭제 및 선택 해제
- * 
+ *
  * @param cart - 장바구니 상품 목록
  * @param calculateCartTotal - 장바구니 총 금액 계산 함수
  * @param addNotification - 알림 추가 함수
@@ -61,7 +61,7 @@ export const useCoupon = ({
   );
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
 
-  const applyCoupon = useCallback(
+  const onApplyCoupon = useCallback(
     (coupon: Coupon) => {
       const currentTotal = calculateCartTotal(cart, null).totalBeforeDiscount;
       const validationResult = couponService.validateCouponApplication(
@@ -79,7 +79,7 @@ export const useCoupon = ({
     [cart, calculateCartTotal]
   );
 
-  const addCoupon = useCallback(
+  const onAddCoupon = useCallback(
     (newCoupon: Coupon) => {
       // 중복 쿠폰 코드 검증
       const validationResult = couponService.checkDuplicateCoupon(
@@ -99,7 +99,7 @@ export const useCoupon = ({
     [coupons, addNotification]
   );
 
-  const removeCoupon = useCallback(
+  const onRemoveCoupon = useCallback(
     (couponCode: string) => {
       setCoupons(prev => prev.filter(c => c.code !== couponCode));
 
@@ -112,16 +112,16 @@ export const useCoupon = ({
     [selectedCoupon, addNotification]
   );
 
-  const clearSelectedCoupon = useCallback(() => {
+  const onClearSelectedCoupon = useCallback(() => {
     setSelectedCoupon(null);
   }, []);
 
   return {
     coupons,
     selectedCoupon,
-    applyCoupon,
-    addCoupon,
-    removeCoupon,
-    clearSelectedCoupon,
+    onApplyCoupon,
+    onAddCoupon,
+    onRemoveCoupon,
+    onClearSelectedCoupon,
   };
 };

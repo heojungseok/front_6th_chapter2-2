@@ -12,24 +12,31 @@ import { calculateCartTotal } from '../utils/calculators';
 interface UseCartProps {
   products: ProductWithUI[];
   selectedCoupon: Coupon | null;
-  addNotification: (message: string, type: 'error' | 'success' | 'warning') => void;
+  addNotification: (
+    message: string,
+    type: 'error' | 'success' | 'warning'
+  ) => void;
 }
 
 /**
  * 장바구니 상태를 관리하는 커스텀 Hook
- * 
+ *
  * 기능:
  * - 장바구니 상품 관리 (추가, 제거, 수량 변경)
  * - 총 개수 및 금액 계산
  * - 쿠폰 적용된 할인 금액 계산
  * - 주문 완료 처리
- * 
+ *
  * @param products - 상품 목록
  * @param selectedCoupon - 선택된 쿠폰
  * @param addNotification - 알림 추가 함수
  * @returns 장바구니 관련 상태와 함수들
  */
-export const useCart = ({ products, selectedCoupon, addNotification }: UseCartProps) => {
+export const useCart = ({
+  products,
+  selectedCoupon,
+  addNotification,
+}: UseCartProps) => {
   const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
   const [totalItemCount, setTotalItemCount] = useState(0);
   const [totals, setTotals] = useState<{
@@ -50,10 +57,13 @@ export const useCart = ({ products, selectedCoupon, addNotification }: UseCartPr
     setTotalItemCount(count);
   }, [cart]);
 
-  const addToCart = useCallback(
+  const onAddToCart = useCallback(
     (product: ProductWithUI) => {
       // 검증
-      const stockValidation = validateCartOperation.validateStockAvailability(product, cart);
+      const stockValidation = validateCartOperation.validateStockAvailability(
+        product,
+        cart
+      );
       if (!stockValidation.isValid) {
         addNotification(stockValidation.message, 'error');
         return;
@@ -61,7 +71,11 @@ export const useCart = ({ products, selectedCoupon, addNotification }: UseCartPr
 
       const existingItem = cart.find(item => item.product.id === product.id);
       if (existingItem) {
-        const quantityValidation = validateCartOperation.validateQuantityIncrease(product, existingItem.quantity);
+        const quantityValidation =
+          validateCartOperation.validateQuantityIncrease(
+            product,
+            existingItem.quantity
+          );
         if (!quantityValidation.isValid) {
           addNotification(quantityValidation.message, 'error');
           return;
@@ -76,18 +90,24 @@ export const useCart = ({ products, selectedCoupon, addNotification }: UseCartPr
     [cart, addNotification]
   );
 
-  const removeFromCart = useCallback((productId: string) => {
-    const newCart = cartService.removeItemFromCart(productId, cart);
-    setCart(newCart);
-  }, [cart]);
+  const removeFromCart = useCallback(
+    (productId: string) => {
+      const newCart = cartService.removeItemFromCart(productId, cart);
+      setCart(newCart);
+    },
+    [cart]
+  );
 
   const updateQuantity = useCallback(
     (productId: string, newQuantity: number) => {
       const product = products.find(p => p.id === productId);
       if (!product) return;
 
-      const validation = validateCartOperation.validateQuantityChange(product, newQuantity);
-      
+      const validation = validateCartOperation.validateQuantityChange(
+        product,
+        newQuantity
+      );
+
       if (!validation.isValid) {
         if (validation.action === 'remove') {
           removeFromCart(productId);
@@ -97,28 +117,32 @@ export const useCart = ({ products, selectedCoupon, addNotification }: UseCartPr
         return;
       }
 
-      const newCart = cartService.updateItemQuantity(productId, newQuantity, cart);
+      const newCart = cartService.updateItemQuantity(
+        productId,
+        newQuantity,
+        cart
+      );
       setCart(newCart);
     },
     [products, cart, removeFromCart, addNotification]
   );
 
-  const completeOrder = useCallback(() => {
-  const orderNumber = generateOrderNumber();
-  addNotification(
-    `주문이 완료되었습니다. 주문번호: ${orderNumber}`,
-    'success'
-  );
-  setCart([]);
-}, [addNotification]);
+  const onCompleteOrder = useCallback(() => {
+    const orderNumber = generateOrderNumber();
+    addNotification(
+      `주문이 완료되었습니다. 주문번호: ${orderNumber}`,
+      'success'
+    );
+    setCart([]);
+  }, [addNotification]);
 
   return {
     cart,
     totalItemCount,
     totals,
-    addToCart,
+    onAddToCart,
     removeFromCart,
     updateQuantity,
-    completeOrder,
+    onCompleteOrder,
   };
 };

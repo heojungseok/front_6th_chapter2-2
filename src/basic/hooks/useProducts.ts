@@ -15,13 +15,13 @@ interface useProductProps {
 
 /**
  * 상품 상태를 관리하는 커스텀 Hook
- * 
+ *
  * 기능:
  * - 상품 CRUD 작업 (추가, 수정, 삭제)
  * - 상품 검색 및 필터링
  * - 상품 폼 상태 관리
  * - 편집 모드 관리
- * 
+ *
  * @param searchTerm - 검색어
  * @param addNotification - 알림 추가 함수
  * @param initialProducts - 초기 상품 목록
@@ -52,7 +52,7 @@ export const useProducts = ({
     setFilteredProducts(filtered);
   }, [products, searchTerm]);
 
-  const startEditProduct = (product: ProductWithUI) => {
+  const onStartEditProduct = (product: ProductWithUI) => {
     setEditingProduct(product.id);
     setProductForm({
       name: product.name,
@@ -76,7 +76,7 @@ export const useProducts = ({
     setShowProductForm(false);
   }, []);
 
-  const addProduct = useCallback(
+  const onAddProduct = useCallback(
     (product: ProductForm) => {
       const newProduct = productService.createProduct(product);
       setProducts(prev => [...prev, newProduct]);
@@ -85,7 +85,7 @@ export const useProducts = ({
     [addNotification]
   );
 
-  const updateProduct = useCallback(
+  const onUpdateProduct = useCallback(
     (productId: string, updates: Partial<ProductWithUI>) => {
       setProducts(prev => {
         return productService.updateProductList(prev, productId, updates);
@@ -95,7 +95,7 @@ export const useProducts = ({
     [addNotification]
   );
 
-  const deleteProduct = useCallback(
+  const onDeleteProduct = useCallback(
     (productId: string) => {
       const updatedProduct = productService.removeProduct(products, productId);
       setProducts(updatedProduct);
@@ -110,10 +110,10 @@ export const useProducts = ({
     productForm,
     showProductForm,
     filteredProducts,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    startEditProduct,
+    onAddProduct,
+    onUpdateProduct,
+    onDeleteProduct,
+    onStartEditProduct,
     resetProductForm,
     setProductForm,
     setEditingProduct,
