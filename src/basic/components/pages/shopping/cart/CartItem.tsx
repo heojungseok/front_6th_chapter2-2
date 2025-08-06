@@ -1,6 +1,6 @@
 import React from 'react';
-import { ProductWithUI } from '../../types';
-import { calculateItemTotal } from '../../utils/calculators';
+import { ProductWithUI } from '../../../../types';
+import { calculateItemTotal } from '../../../../utils/calculators';
 
 interface CartItemProps {
   item: {

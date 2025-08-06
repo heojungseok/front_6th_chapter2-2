@@ -1,7 +1,7 @@
 import React from 'react';
-import { ProductWithUI } from '../../types';
+import { ProductWithUI } from '../../../../types';
 import { CartItem } from './CartItem';
-import { Button } from '../ui';
+import { Button } from '../../../ui';
 
 interface CartSidebarProps {
   cart: Array<{ product: ProductWithUI; quantity: number }>;

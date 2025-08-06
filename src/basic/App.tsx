@@ -14,12 +14,18 @@ import { useSearch } from './hooks/useSearch';
 import { useUIState } from './hooks/useUIStates';
 import { useCouponForm } from './hooks/useCouponForm';
 import { Button, Input, Notification } from './components/ui';
-import { ProductCard } from './components/product';
-import { CartItem } from './components/cart';
-import { CartSidebar } from './components/cart';
+import { ProductCard } from './components/pages/shopping/product';
+import { CartItem } from './components/pages/shopping/cart';
+import { CartSidebar } from './components/pages/shopping/cart';
 import { Header } from './components/layout';
-import { ProductList } from './components/product';
-import { CouponManagement, ProductManagement } from './components/pages/admin';
+import { ProductList } from './components/pages/shopping/product';
+import {
+  CouponManagement,
+  ProductManagement,
+  AdminHeader,
+  AdminPage,
+} from './components/pages/admin';
+import { ShoppingPage } from './components/pages';
 
 // 초기 데이터
 const initialProducts: ProductWithUI[] = [
@@ -165,97 +171,48 @@ const App = () => {
 
       <main className='max-w-7xl mx-auto px-4 py-8'>
         {isAdmin ? (
-          <div className='max-w-6xl mx-auto'>
-            <div className='mb-8'>
-              <h1 className='text-2xl font-bold text-gray-900'>
-                관리자 대시보드
-              </h1>
-              <p className='text-gray-600 mt-1'>
-                상품과 쿠폰을 관리할 수 있습니다
-              </p>
-            </div>
-            <div className='border-b border-gray-200 mb-6'>
-              <nav className='-mb-px flex space-x-8'>
-                <button
-                  onClick={() => onSetActiveTab('products')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === 'products'
-                      ? 'border-gray-900 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  상품 관리
-                </button>
-                <button
-                  onClick={() => onSetActiveTab('coupons')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === 'coupons'
-                      ? 'border-gray-900 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  쿠폰 관리
-                </button>
-              </nav>
-            </div>
-
-            {activeTab === 'products' ? (
-              <ProductManagement
-                products={products}
-                productForm={productForm}
-                editingProduct={editingProduct}
-                showProductForm={showProductForm}
-                cart={cart}
-                isAdmin={isAdmin}
-                onAddProduct={onAddProduct}
-                onUpdateProduct={onUpdateProduct}
-                onDeleteProduct={onDeleteProduct}
-                onStartEditProduct={onStartEditProduct}
-                setProductForm={setProductForm}
-                setEditingProduct={setEditingProduct}
-                setShowProductForm={setShowProductForm}
-                addNotification={addNotification}
-              />
-            ) : (
-              <CouponManagement
-                coupons={coupons}
-                couponForm={couponForm}
-                showCouponForm={showCouponForm}
-                onRemoveCoupon={onRemoveCoupon}
-                onAddCoupon={onAddCoupon}
-                setCouponForm={setCouponForm}
-                setShowCouponForm={setShowCouponForm}
-                addNotification={addNotification}
-              />
-            )}
-          </div>
+          <AdminPage
+            activeTab={activeTab}
+            products={products}
+            productForm={productForm}
+            editingProduct={editingProduct}
+            showProductForm={showProductForm}
+            cart={cart}
+            isAdmin={isAdmin}
+            coupons={coupons}
+            couponForm={couponForm}
+            showCouponForm={showCouponForm}
+            onSetActiveTab={onSetActiveTab}
+            onAddProduct={onAddProduct}
+            onUpdateProduct={onUpdateProduct}
+            onDeleteProduct={onDeleteProduct}
+            onStartEditProduct={onStartEditProduct}
+            setProductForm={setProductForm}
+            setEditingProduct={setEditingProduct}
+            setShowProductForm={setShowProductForm}
+            onRemoveCoupon={onRemoveCoupon}
+            onAddCoupon={onAddCoupon}
+            setCouponForm={setCouponForm}
+            setShowCouponForm={setShowCouponForm}
+            addNotification={addNotification}
+          />
         ) : (
-          <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
-            <div className='lg:col-span-3'>
-              <ProductList
-                products={products}
-                filteredProducts={filteredProducts}
-                cart={cart}
-                searchTerm={debouncedSearchTerm}
-                isAdmin={isAdmin}
-                onAddToCart={onAddToCart}
-              />
-            </div>
-
-            <div className='lg:col-span-1'>
-              <CartSidebar
-                cart={cart}
-                coupons={coupons}
-                selectedCoupon={selectedCoupon}
-                totals={totals}
-                onUpdateQuantity={onUpdateQuantity}
-                onRemoveFromCart={onRemoveFromCart}
-                onApplyCoupon={onApplyCoupon}
-                onClearSelectedCoupon={onClearSelectedCoupon}
-                onCompleteOrder={onCompleteOrder}
-              />
-            </div>
-          </div>
+          <ShoppingPage
+            products={products}
+            filteredProducts={filteredProducts}
+            cart={cart}
+            coupons={coupons}
+            selectedCoupon={selectedCoupon}
+            totals={totals}
+            searchTerm={debouncedSearchTerm}
+            isAdmin={isAdmin}
+            onAddToCart={onAddToCart}
+            onUpdateQuantity={onUpdateQuantity}
+            onRemoveFromCart={onRemoveFromCart}
+            onApplyCoupon={onApplyCoupon}
+            onClearSelectedCoupon={onClearSelectedCoupon}
+            onCompleteOrder={onCompleteOrder}
+          />
         )}
       </main>
     </div>

@@ -1,8 +1,8 @@
 import React from 'react';
-import { ProductWithUI } from '../../types';
+import { ProductWithUI } from '../../../../types';
 import { ProductCard } from './ProductCard';
-import { getRemainingStock } from '../../utils/calculators';
-import { formatPrice } from '../../utils/formatters';
+import { getRemainingStock } from '../../../../utils/calculators';
+import { formatPrice } from '../../../../utils/formatters';
 
 interface ProductListProps {
   products: ProductWithUI[];

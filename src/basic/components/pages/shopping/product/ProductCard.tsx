@@ -1,6 +1,6 @@
 import React from 'react';
-import { ProductWithUI } from '../../types';
-import { Button } from '../ui';
+import { ProductWithUI } from '../../../../types';
+import { Button } from '../../../ui';
 
 interface ProductCardProps {
   product: ProductWithUI;
