@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAtom } from 'jotai';
+import { useAtomValue } from 'jotai'; // useAtom → useAtomValue
 import { CartItem } from './CartItem';
 import { Button } from '../../../ui';
 import { cartAtom, cartTotalsAtom } from '../../../../atoms/cartAtoms';
@@ -14,18 +14,18 @@ interface CartSidebarProps {
   onCompleteOrder: () => void;
 }
 
-export const CartSidebar: React.FC<CartSidebarProps> = ({
+export const CartSidebar = React.memo<CartSidebarProps>(({ // React.memo 추가
   onUpdateQuantity,
   onRemoveFromCart,
   onApplyCoupon,
   onClearSelectedCoupon,
   onCompleteOrder,
 }) => {
-  // Jotai atoms 사용
-  const [cart] = useAtom(cartAtom);
-  const [coupons] = useAtom(couponsAtom);
-  const [selectedCoupon] = useAtom(selectedCouponAtom);
-  const [totals] = useAtom(cartTotalsAtom);
+  // 읽기 전용 상태로 최적화
+  const cart = useAtomValue(cartAtom);
+  const coupons = useAtomValue(couponsAtom);
+  const selectedCoupon = useAtomValue(selectedCouponAtom);
+  const totals = useAtomValue(cartTotalsAtom);
 
   return (
     <div className='sticky top-24 space-y-4'>
@@ -155,4 +155,4 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
       )}
     </div>
   );
-};
+});

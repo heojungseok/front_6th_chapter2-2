@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { ProductCard } from './ProductCard';
 import { getRemainingStock } from '../../../../utils/calculators';
@@ -17,6 +17,23 @@ export const ProductList = React.memo(() => {
   // 쓰기 전용 액션
   const addToCart = useSetAtom(addToCartAtom);
 
+  // 복잡한 계산 결과 메모이제이션
+  const productCards = useMemo(() => {
+    return filteredProducts.map(product => {
+      const remainingStock = getRemainingStock(product, cart);
+      
+      return (
+        <ProductCard
+          key={product.id}
+          product={product}
+          onAddToCart={addToCart}
+          getRemainingStock={() => remainingStock}
+          formatPrice={(price) => formatPrice(price, remainingStock <= 0)}
+        />
+      );
+    });
+  }, [filteredProducts, cart, addToCart]);
+
   return (
     <section>
       <div className='mb-6 flex justify-between items-center'>
@@ -32,19 +49,7 @@ export const ProductList = React.memo(() => {
         </div>
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-          {filteredProducts.map(product => {
-            const remainingStock = getRemainingStock(product, cart);
-
-            return (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
-                getRemainingStock={() => remainingStock}
-                formatPrice={(price) => formatPrice(price, remainingStock <= 0)}
-              />
-            );
-          })}
+          {productCards}
         </div>
       )}
     </section>

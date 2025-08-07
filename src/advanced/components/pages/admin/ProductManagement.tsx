@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai'; // useAtom → useAtomValue, useSetAtom
 import { ProductWithUI } from '../../../types';
 import { ProductTable } from './product/ProductTable';
 import { ProductForm } from './product/ProductForm';
@@ -15,18 +15,24 @@ interface ProductManagementProps {
   onStartEditProduct: (product: ProductWithUI) => void;
 }
 
-export const ProductManagement: React.FC<ProductManagementProps> = ({
+export const ProductManagement = React.memo<ProductManagementProps>(({ // React.memo 추가
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
   onStartEditProduct,
 }) => {
-  const [products] = useAtom(productsAtom);
-  const [cart] = useAtom(cartAtom);
-  const [isAdmin] = useAtom(isAdminAtom);
-  const [showProductForm, setShowProductForm] = useAtom(showProductFormAtom);
-  const [editingProduct, setEditingProduct] = useAtom(editingProductAtom);
-  const [productForm, setProductForm] = useAtom(productFormAtom);
+  // 읽기 전용 상태
+  const products = useAtomValue(productsAtom);
+  const cart = useAtomValue(cartAtom);
+  const isAdmin = useAtomValue(isAdminAtom);
+  const showProductForm = useAtomValue(showProductFormAtom);
+  const editingProduct = useAtomValue(editingProductAtom);
+  const productForm = useAtomValue(productFormAtom);
+  
+  // 쓰기 전용 액션
+  const setShowProductForm = useSetAtom(showProductFormAtom);
+  const setEditingProduct = useSetAtom(editingProductAtom);
+  const setProductForm = useSetAtom(productFormAtom);
 
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,4 +101,4 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({
       )}
     </section>
   );
-};
+});

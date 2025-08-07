@@ -12,7 +12,7 @@ interface CartItemProps {
   onRemoveFromCart: (productId: string) => void;
 }
 
-export const CartItem: React.FC<CartItemProps> = ({
+export const CartItem = React.memo<CartItemProps>(({ // React.memo 추가
   item,
   cart,
   onUpdateQuantity,
@@ -86,4 +86,4 @@ export const CartItem: React.FC<CartItemProps> = ({
       </div>
     </div>
   );
-};
+});
