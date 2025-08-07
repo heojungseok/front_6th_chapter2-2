@@ -1,8 +1,13 @@
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 import { ProductWithUI } from '../types';
 import { searchTermAtom } from './uiAtoms';
+import { initialProducts } from '../data/initialData';
 
-export const productsAtom = atom<ProductWithUI[]>([]);
+export const productsAtom = atomWithStorage<ProductWithUI[]>(
+  'products',
+  initialProducts
+);
 export const editingProductAtom = atom<string | null>(null);
 export const productFormAtom = atom({
   name: '',
@@ -16,9 +21,9 @@ export const productFormAtom = atom({
 export const filteredProductsAtom = atom(get => {
   const products = get(productsAtom);
   const searchTerm = get(searchTermAtom);
-  
+
   if (!searchTerm.trim()) return products;
-  
+
   return products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );

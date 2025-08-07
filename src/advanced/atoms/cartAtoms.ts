@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 import { calculateCartTotal } from '../utils/calculators';
 import { selectedCouponAtom } from './couponAtoms';
 
@@ -7,7 +8,8 @@ export interface CartItem {
   quantity: number;
 }
 
-export const cartAtom = atom<CartItem[]>([]);
+// localStorage와 연동되는 atom
+export const cartAtom = atomWithStorage<CartItem[]>('cart', []);
 
 // 파생 atom: 장바구니 총 아이템 개수
 export const totalItemCountAtom = atom(get => {

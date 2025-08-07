@@ -11,7 +11,6 @@ import { Header } from './components/layout';
 import { AdminPage, ShoppingPage } from './components/pages';
 import { initialProducts } from './data/initialData';
 
-
 export const AppContent = () => {
   const { notifications, addNotification, removeNotification } =
     useNotifications();
@@ -52,11 +51,9 @@ export const AppContent = () => {
     onUpdateQuantity,
     onCompleteOrder,
     onRemoveFromCart,
-    totalItemCount,
     totals,
   } = useCart({
     products,
-    selectedCoupon,
     addNotification,
   });
 
@@ -85,14 +82,7 @@ export const AppContent = () => {
           ))}
         </div>
       )}
-      <Header
-        isAdmin={isAdmin}
-        searchTerm={searchTerm}
-        cartLength={cart.length}
-        totalItemCount={totalItemCount}
-        onSearchChange={setSearchTerm}
-        onToggleAdmin={onToggleAdmin}
-      />
+      <Header />
 
       <main className='max-w-7xl mx-auto px-4 py-8'>
         {isAdmin ? (

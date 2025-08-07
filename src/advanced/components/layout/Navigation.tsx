@@ -1,14 +1,14 @@
 import React from 'react';
+import { useAtom } from 'jotai';
+import { isAdminAtom } from '../../atoms/uiAtoms';
 
-interface NavigationProps {
-  isAdmin: boolean;
-  onToggleAdmin: () => void;
-}
+export const Navigation: React.FC = () => {
+  const [isAdmin, setIsAdmin] = useAtom(isAdminAtom);
 
-export const Navigation: React.FC<NavigationProps> = ({
-  isAdmin,
-  onToggleAdmin,
-}) => {
+  const onToggleAdmin = () => {
+    setIsAdmin(prev => !prev);
+  };
+
   return (
     <button
       onClick={onToggleAdmin}

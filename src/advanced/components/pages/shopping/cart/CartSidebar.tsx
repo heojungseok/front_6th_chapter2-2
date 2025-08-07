@@ -137,15 +137,11 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
                   {totals.totalBeforeDiscount.toLocaleString()}원
                 </span>
               </div>
-              {totals.totalBeforeDiscount - totals.totalAfterDiscount > 0 && (
+              {selectedCoupon && (
                 <div className='flex justify-between text-red-500'>
                   <span>할인 금액</span>
                   <span>
-                    -
-                    {(
-                      totals.totalBeforeDiscount - totals.totalAfterDiscount
-                    ).toLocaleString()}
-                    원
+                    -{selectedCoupon.discountValue.toLocaleString()}원
                   </span>
                 </div>
               )}

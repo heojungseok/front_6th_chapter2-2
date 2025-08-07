@@ -1,17 +1,22 @@
+import { useAtom } from 'jotai';
 import { useState, useCallback, useEffect } from 'react';
 import { CartItem, Coupon, ProductWithUI } from '../types';
-import { useLocalStorage } from './useLocalStorage';
+import {
+  cartAtom,
+  totalItemCountAtom,
+  cartTotalsAtom,
+} from '../atoms/cartAtoms';
+// import { useLocalStorage } from './useLocalStorage';
 import { generateOrderNumber } from '../utils/generators';
 import { cartService } from '../services/cartService';
 import { validateCartOperation } from '../utils/validators';
-import { calculateCartTotal } from '../utils/calculators';
+import { selectedCouponAtom } from '../atoms/couponAtoms';
 
 /**
  * 장바구니 상태 관리 Hook의 Props 인터페이스
  */
 interface UseCartProps {
   products: ProductWithUI[];
-  selectedCoupon: Coupon | null;
   addNotification: (
     message: string,
     type: 'error' | 'success' | 'warning'
@@ -32,30 +37,11 @@ interface UseCartProps {
  * @param addNotification - 알림 추가 함수
  * @returns 장바구니 관련 상태와 함수들
  */
-export const useCart = ({
-  products,
-  selectedCoupon,
-  addNotification,
-}: UseCartProps) => {
-  const [cart, setCart] = useLocalStorage<CartItem[]>('cart', []);
-  const [totalItemCount, setTotalItemCount] = useState(0);
-  const [totals, setTotals] = useState<{
-    totalBeforeDiscount: number;
-    totalAfterDiscount: number;
-  }>({
-    totalBeforeDiscount: 0,
-    totalAfterDiscount: 0,
-  });
-
-  useEffect(() => {
-    const calculatedTotals = calculateCartTotal(cart, selectedCoupon);
-    setTotals(calculatedTotals);
-  }, [cart, selectedCoupon]);
-
-  useEffect(() => {
-    const count = cartService.calculateTotalItemCount(cart);
-    setTotalItemCount(count);
-  }, [cart]);
+export const useCart = ({ products, addNotification }: UseCartProps) => {
+  const [cart, setCart] = useAtom(cartAtom);
+  const [totalItemCount] = useAtom(totalItemCountAtom);
+  const [selectedCoupon] = useAtom(selectedCouponAtom);
+  const [totals] = useAtom(cartTotalsAtom);
 
   const onAddToCart = useCallback(
     (product: ProductWithUI) => {

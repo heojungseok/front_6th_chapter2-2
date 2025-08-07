@@ -1,5 +1,7 @@
+import { useAtom } from 'jotai';
 import { useState, useCallback, useEffect } from 'react';
-import { useLocalStorage } from './useLocalStorage';
+import { productsAtom } from '../atoms/productAtoms';
+import { initialProducts } from '../data/initialData';
 import { productService } from '../services/productService';
 import { ProductWithUI, ProductForm } from '../types';
 import { filterProducts } from '../utils/filters';
@@ -30,12 +32,8 @@ interface useProductProps {
 export const useProducts = ({
   searchTerm,
   addNotification,
-  initialProducts,
 }: useProductProps) => {
-  const [products, setProducts] = useLocalStorage<ProductWithUI[]>(
-    'products',
-    initialProducts
-  );
+  const [products, setProducts] = useAtom(productsAtom);
   const [filteredProducts, setFilteredProducts] = useState<ProductWithUI[]>([]);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [productForm, setProductForm] = useState<ProductForm>({
@@ -46,6 +44,12 @@ export const useProducts = ({
     discounts: [],
   });
   const [showProductForm, setShowProductForm] = useState(false);
+
+  useEffect(() => {
+    if (products.length === 0) {
+      setProducts(initialProducts);
+    }
+  }, [products, setProducts]);
 
   useEffect(() => {
     const filtered = filterProducts(products, searchTerm);
