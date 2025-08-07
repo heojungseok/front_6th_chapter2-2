@@ -5,18 +5,10 @@ import { showProductFormAtom } from '../atoms/uiAtoms';
 import { initialProducts } from '../data/initialData';
 import { productService } from '../services/productService';
 import { ProductWithUI, ProductForm } from '../types';
+import { useNotifications } from './useNotifications';
 
 /**
- * 상품 관리 Hook의 Props 인터페이스
- */
-interface useProductProps {
-  searchTerm: string;
-  addNotification: (message: string, type: 'success' | 'error') => void;
-  initialProducts: ProductWithUI[];
-}
-
-/**
- * 상품 상태를 관리하는 커스텀 Hook
+ * 상품 상태를 관리하는 커스텀 Hook (완전 Jotai 기반)
  *
  * 기능:
  * - 상품 CRUD 작업 (추가, 수정, 삭제)
@@ -24,20 +16,15 @@ interface useProductProps {
  * - 상품 폼 상태 관리
  * - 편집 모드 관리
  *
- * @param searchTerm - 검색어
- * @param addNotification - 알림 추가 함수
- * @param initialProducts - 초기 상품 목록
  * @returns 상품 관련 상태와 함수들
  */
-export const useProducts = ({
-  searchTerm,
-  addNotification,
-}: useProductProps) => {
+export const useProducts = () => {
   const [products, setProducts] = useAtom(productsAtom);
   const [filteredProducts] = useAtom(filteredProductsAtom);
   const [editingProduct, setEditingProduct] = useAtom(editingProductAtom);
   const [productForm, setProductForm] = useAtom(productFormAtom);
   const [showProductForm, setShowProductForm] = useAtom(showProductFormAtom);
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     if (products.length === 0) {

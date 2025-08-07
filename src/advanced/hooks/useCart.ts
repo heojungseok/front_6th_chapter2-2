@@ -1,30 +1,16 @@
 import { useAtom } from 'jotai';
-import { useState, useCallback, useEffect } from 'react';
-import { CartItem, Coupon, ProductWithUI } from '../types';
-import {
-  cartAtom,
-  totalItemCountAtom,
-  cartTotalsAtom,
-} from '../atoms/cartAtoms';
-// import { useLocalStorage } from './useLocalStorage';
+import { useCallback } from 'react';
+import { cartAtom, totalItemCountAtom, cartTotalsAtom, addToCartAtom } from '../atoms/cartAtoms';
+import { productsAtom } from '../atoms/productAtoms';
+import { selectedCouponAtom } from '../atoms/couponAtoms';
 import { generateOrderNumber } from '../utils/generators';
 import { cartService } from '../services/cartService';
 import { validateCartOperation } from '../utils/validators';
-import { selectedCouponAtom } from '../atoms/couponAtoms';
+import { useNotifications } from './useNotifications';
+import { ProductWithUI } from '../types';
 
 /**
- * 장바구니 상태 관리 Hook의 Props 인터페이스
- */
-interface UseCartProps {
-  products: ProductWithUI[];
-  addNotification: (
-    message: string,
-    type: 'error' | 'success' | 'warning'
-  ) => void;
-}
-
-/**
- * 장바구니 상태를 관리하는 커스텀 Hook
+ * 장바구니 상태를 관리하는 커스텀 Hook (완전 Jotai 기반)
  *
  * 기능:
  * - 장바구니 상품 관리 (추가, 제거, 수량 변경)
@@ -32,16 +18,14 @@ interface UseCartProps {
  * - 쿠폰 적용된 할인 금액 계산
  * - 주문 완료 처리
  *
- * @param products - 상품 목록
- * @param selectedCoupon - 선택된 쿠폰
- * @param addNotification - 알림 추가 함수
  * @returns 장바구니 관련 상태와 함수들
  */
-export const useCart = ({ products, addNotification }: UseCartProps) => {
+export const useCart = () => {
   const [cart, setCart] = useAtom(cartAtom);
   const [totalItemCount] = useAtom(totalItemCountAtom);
-  const [selectedCoupon] = useAtom(selectedCouponAtom);
   const [totals] = useAtom(cartTotalsAtom);
+  const [products] = useAtom(productsAtom);
+  const { addNotification } = useNotifications();
 
   const onAddToCart = useCallback(
     (product: ProductWithUI) => {
@@ -73,7 +57,7 @@ export const useCart = ({ products, addNotification }: UseCartProps) => {
       setCart(newCart);
       addNotification('장바구니에 담았습니다', 'success');
     },
-    [cart, addNotification]
+    [cart, setCart, addNotification]
   );
 
   const onRemoveFromCart = useCallback(
@@ -81,7 +65,7 @@ export const useCart = ({ products, addNotification }: UseCartProps) => {
       const newCart = cartService.removeItemFromCart(productId, cart);
       setCart(newCart);
     },
-    [cart]
+    [cart, setCart]
   );
 
   const onUpdateQuantity = useCallback(
@@ -110,7 +94,7 @@ export const useCart = ({ products, addNotification }: UseCartProps) => {
       );
       setCart(newCart);
     },
-    [products, cart, onRemoveFromCart, addNotification]
+    [products, cart, setCart, onRemoveFromCart, addNotification]
   );
 
   const onCompleteOrder = useCallback(() => {
@@ -120,7 +104,7 @@ export const useCart = ({ products, addNotification }: UseCartProps) => {
       'success'
     );
     setCart([]);
-  }, [addNotification]);
+  }, [setCart, addNotification]);
 
   return {
     cart,

@@ -5,14 +5,13 @@ import { getRemainingStock } from '../../../../utils/calculators';
 import { formatPrice } from '../../../../utils/formatters';
 import { productsAtom, filteredProductsAtom } from '../../../../atoms/productAtoms';
 import { cartAtom, addToCartAtom } from '../../../../atoms/cartAtoms';
-import { searchTermAtom, isAdminAtom } from '../../../../atoms/uiAtoms';
+import { searchTermAtom } from '../../../../atoms/uiAtoms';
 
 export const ProductList: React.FC = () => {
   const [products] = useAtom(productsAtom);
   const [filteredProducts] = useAtom(filteredProductsAtom);
   const [cart] = useAtom(cartAtom);
   const [searchTerm] = useAtom(searchTermAtom);
-  const [isAdmin] = useAtom(isAdminAtom);
   const addToCart = useSetAtom(addToCartAtom);
 
   return (
@@ -39,11 +38,9 @@ export const ProductList: React.FC = () => {
               formatPrice={(price) =>
                 formatPrice(
                   price,
-                  isAdmin,
                   getRemainingStock(product, cart) <= 0
                 )
               }
-              isAdmin={isAdmin}
             />
           ))}
         </div>

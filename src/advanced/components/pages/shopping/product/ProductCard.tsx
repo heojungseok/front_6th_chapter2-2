@@ -7,7 +7,6 @@ interface ProductCardProps {
   onAddToCart: (product: ProductWithUI) => void;
   getRemainingStock: (product: ProductWithUI) => number;
   formatPrice: (price: number, productId?: string) => string;
-  isAdmin?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -15,7 +14,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   getRemainingStock,
   formatPrice,
-  isAdmin = false,
 }) => {
   const remainingStock = getRemainingStock(product);
   const maxDiscountRate = Math.max(...product.discounts.map(d => d.rate)) * 100;

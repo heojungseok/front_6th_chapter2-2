@@ -2,41 +2,29 @@ import { useNotifications } from './hooks/useNotifications';
 import { useCoupon } from './hooks/useCoupon';
 import { useProducts } from './hooks/useProducts';
 import { useCart } from './hooks/useCart';
-import { useSearch } from './hooks/useSearch';
 import { useUIState } from './hooks/useUIStates';
 import { Notification } from './components/ui';
 import { Header } from './components/layout';
 import { AdminPage, ShoppingPage } from './components/pages';
-import { initialProducts } from './data/initialData';
 
 export const AppContent = () => {
-  const { notifications, addNotification, removeNotification } =
+  const { notifications, removeNotification } =
     useNotifications();
-
-  const { debouncedSearchTerm } = useSearch();
 
   const { onClearSelectedCoupon, onApplyCoupon } = useCoupon();
 
   const {
-    products,
     onAddProduct,
     onUpdateProduct,
     onDeleteProduct,
     onStartEditProduct,
-  } = useProducts({
-    addNotification,
-    initialProducts,
-    searchTerm: debouncedSearchTerm,
-  });
+  } = useProducts();
 
   const {
     onUpdateQuantity,
     onCompleteOrder,
     onRemoveFromCart,
-  } = useCart({
-    products,
-    addNotification,
-  });
+  } = useCart();
 
   const { isAdmin, onSetActiveTab } = useUIState();
 

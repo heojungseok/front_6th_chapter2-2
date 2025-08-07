@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
-import { CartItem, Coupon } from '../types';
+import { Coupon } from '../types';
 import { cartAtom } from '../atoms/cartAtoms';
 import { couponsAtom, selectedCouponAtom } from '../atoms/couponAtoms';
 import { couponService } from '../services/couponService';
