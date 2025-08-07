@@ -7,7 +7,6 @@ import { CouponManagement } from './CouponManagement';
 import { ProductWithUI } from '../../../types';
 
 interface AdminPageProps {
-  
   onSetActiveTab: (tab: 'products' | 'coupons') => void;
   onAddProduct: (product: any) => void;
   onUpdateProduct: (productId: string, updates: any) => void;
@@ -16,7 +15,6 @@ interface AdminPageProps {
 }
 
 export const AdminPage: React.FC<AdminPageProps> = ({
-  
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,

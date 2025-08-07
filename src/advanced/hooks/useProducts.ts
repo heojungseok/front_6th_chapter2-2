@@ -1,6 +1,11 @@
 import { useAtom } from 'jotai';
 import { useCallback, useEffect } from 'react';
-import { productsAtom, editingProductAtom, productFormAtom, filteredProductsAtom } from '../atoms/productAtoms';
+import {
+  productsAtom,
+  editingProductAtom,
+  productFormAtom,
+  filteredProductsAtom,
+} from '../atoms/productAtoms';
 import { showProductFormAtom } from '../atoms/uiAtoms';
 import { initialProducts } from '../data/initialData';
 import { productService } from '../services/productService';
@@ -32,17 +37,20 @@ export const useProducts = () => {
     }
   }, [products, setProducts]);
 
-  const onStartEditProduct = useCallback((product: ProductWithUI) => {
-    setEditingProduct(product.id);
-    setProductForm({
-      name: product.name,
-      price: product.price,
-      stock: product.stock,
-      description: product.description || '',
-      discounts: product.discounts || [],
-    });
-    setShowProductForm(true);
-  }, [setEditingProduct, setProductForm, setShowProductForm]);
+  const onStartEditProduct = useCallback(
+    (product: ProductWithUI) => {
+      setEditingProduct(product.id);
+      setProductForm({
+        name: product.name,
+        price: product.price,
+        stock: product.stock,
+        description: product.description || '',
+        discounts: product.discounts || [],
+      });
+      setShowProductForm(true);
+    },
+    [setEditingProduct, setProductForm, setShowProductForm]
+  );
 
   const resetProductForm = useCallback(() => {
     setProductForm({

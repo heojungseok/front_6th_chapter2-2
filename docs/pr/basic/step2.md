@@ -533,12 +533,14 @@ productService (도메인 로직)
 ```typescript
 // ❌ 강한 결합 (직접 생성)
 const useCart = () => {
-  const addNotification = () => { /* 알림 로직 */ };  // Hook 내부에서 직접 구현
+  const addNotification = () => {
+    /* 알림 로직 */
+  }; // Hook 내부에서 직접 구현
 };
 
 // ✅ 느슨한 결합 (의존성 주입)
 interface UseCartProps {
-  addNotification: (message: string, type: string) => void;  // 외부에서 주입받음
+  addNotification: (message: string, type: string) => void; // 외부에서 주입받음
 }
 const useCart = ({ addNotification }: UseCartProps) => {
   // 외부에서 주입받은 함수 사용
@@ -546,6 +548,7 @@ const useCart = ({ addNotification }: UseCartProps) => {
 ```
 
 **장점**:
+
 - 결합도 감소
 - 테스트 용이성 (모킹 가능)
 - 재사용성 향상
@@ -573,6 +576,7 @@ const useCart = ({ products, addNotification }: UseCartProps) => {
 ```
 
 **장점**:
+
 - 타입 안전성 (잘못된 타입 사용 시 컴파일 에러)
 - IDE 자동완성
 - 코드 문서화 효과
@@ -580,67 +584,102 @@ const useCart = ({ products, addNotification }: UseCartProps) => {
 ### 6단계: useCart Hook 분리 (도메인 서비스 패턴)
 
 #### 목적
+
 장바구니 상태 관리 로직과 비즈니스 로직 분리
 
 #### 도메인 서비스 패턴 적용
 
 **cartService (순수 비즈니스 로직)**
+
 ```typescript
 export const cartService = {
-  addItemToCart: (product, cart) => { /* 장바구니 추가 로직 */ },
-  removeItemFromCart: (productId, cart) => { /* 장바구니 제거 로직 */ },
-  updateItemQuantity: (productId, newQuantity, cart) => { /* 수량 업데이트 로직 */ },
-  calculateTotalItemCount: (cart) => { /* 총 개수 계산 */ },
+  addItemToCart: (product, cart) => {
+    /* 장바구니 추가 로직 */
+  },
+  removeItemFromCart: (productId, cart) => {
+    /* 장바구니 제거 로직 */
+  },
+  updateItemQuantity: (productId, newQuantity, cart) => {
+    /* 수량 업데이트 로직 */
+  },
+  calculateTotalItemCount: cart => {
+    /* 총 개수 계산 */
+  },
 };
 ```
 
 **validators (순수 검증 로직)**
+
 ```typescript
 export const validateCartOperation = {
-  validateStockAvailability: (product, cart) => { /* 재고 검증 */ },
-  validateQuantityIncrease: (product, currentQuantity) => { /* 수량 증가 검증 */ },
-  validateQuantityChange: (product, newQuantity) => { /* 수량 변경 검증 */ },
+  validateStockAvailability: (product, cart) => {
+    /* 재고 검증 */
+  },
+  validateQuantityIncrease: (product, currentQuantity) => {
+    /* 수량 증가 검증 */
+  },
+  validateQuantityChange: (product, newQuantity) => {
+    /* 수량 변경 검증 */
+  },
 };
 ```
 
 **useCart Hook (상태 관리 + 서비스 조합)**
+
 ```typescript
 export const useCart = ({ products, addNotification }) => {
   const [cart, setCart] = useLocalStorage('cart', []);
   const [totalItemCount, setTotalItemCount] = useState(0);
 
-  const addToCart = useCallback((product) => {
-    // 1. 검증
-    const stockValidation = validateCartOperation.validateStockAvailability(product, cart);
-    if (!stockValidation.isValid) {
-      addNotification(stockValidation.message, 'error');
-      return;
-    }
-    
-    // 2. 비즈니스 로직
-    const newCart = cartService.addItemToCart(product, cart);
-    setCart(newCart);
-    addNotification('장바구니에 담았습니다', 'success');
-  }, [cart, addNotification]);
+  const addToCart = useCallback(
+    product => {
+      // 1. 검증
+      const stockValidation = validateCartOperation.validateStockAvailability(
+        product,
+        cart
+      );
+      if (!stockValidation.isValid) {
+        addNotification(stockValidation.message, 'error');
+        return;
+      }
 
-  return { cart, totalItemCount, addToCart, removeFromCart, updateQuantity, completeOrder };
+      // 2. 비즈니스 로직
+      const newCart = cartService.addItemToCart(product, cart);
+      setCart(newCart);
+      addNotification('장바구니에 담았습니다', 'success');
+    },
+    [cart, addNotification]
+  );
+
+  return {
+    cart,
+    totalItemCount,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    completeOrder,
+  };
 };
 ```
 
 ### 7단계: UI 상태 관리 Hook 분리
 
 #### 목적
+
 App.tsx의 UI 관련 상태들을 Hook으로 분리하여 관심사 분리 완성
 
 #### 분리된 Hook들
 
 **useUIState Hook (hooks/useUIState.ts)**
+
 ```typescript
 export const useUIState = () => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
+    'products'
+  );
   const [showCouponForm, setShowCouponForm] = useState(false);
-  
+
   return {
     isAdmin,
     activeTab,
@@ -653,6 +692,7 @@ export const useUIState = () => {
 ```
 
 **useCouponForm Hook (hooks/useCouponForm.ts)**
+
 ```typescript
 export const useCouponForm = () => {
   const [couponForm, setCouponForm] = useState<CouponForm>({
@@ -661,7 +701,7 @@ export const useCouponForm = () => {
     discountType: 'amount' as 'amount' | 'percentage',
     discountValue: 0,
   });
-  
+
   const resetCouponForm = useCallback(() => {
     setCouponForm({
       name: '',
@@ -670,7 +710,7 @@ export const useCouponForm = () => {
       discountValue: 0,
     });
   }, []);
-  
+
   return {
     couponForm,
     setCouponForm,
@@ -680,12 +720,14 @@ export const useCouponForm = () => {
 ```
 
 #### 핵심 성과
+
 - **완전한 관심사 분리**: UI 상태와 도메인 상태 완전 분리
 - **재사용성**: UI 상태 Hook들을 다른 컴포넌트에서도 활용 가능
 - **테스트 용이성**: UI 상태만 독립적으로 테스트 가능
 - **가독성**: App.tsx가 순수한 UI 컴포넌트로 변환
 
 #### 아키텍처 개선
+
 App.tsx (UI 렌더링 + 이벤트 핸들러)
 ↓ 의존성 주입
 useUIState + useCouponForm (UI 상태 관리)
@@ -695,6 +737,7 @@ useProducts + useCart + useCoupon (도메인 로직)
 ### �� 트러블슈팅: Hook 간 상태 충돌
 
 #### 문제점
+
 ```typescript
 // useProducts에서
 const [showProductForm, setShowProductForm] = useState(false);
@@ -719,12 +762,15 @@ const useProducts = () => {
 // ✅ useUIState에서는 전역 UI 상태만 관리
 const useUIState = () => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
+    'products'
+  );
   const [showCouponForm, setShowCouponForm] = useState(false); // 쿠폰 폼은 UI 상태
 };
 ```
 
 #### 학습 포인트
+
 - **도메인 경계 명확화**: 상품 관련 상태는 useProducts, 쿠폰 관련 상태는 useCoupon
 - **UI 상태 분리**: 전역 UI 상태만 useUIState에서 관리
 - **응집성 원칙**: 관련된 상태들은 같은 Hook에서 관리
@@ -732,6 +778,7 @@ const useUIState = () => {
 ### 🎯 최종 완성도
 
 #### 완료된 Hook 목록 (9개)
+
 1. **useLocalStorage**: localStorage 관리
 2. **useNotifications**: 알림 시스템
 3. **useDebounce**: 검색 성능 최적화
@@ -743,6 +790,7 @@ const useUIState = () => {
 9. **useCouponForm**: 쿠폰 폼 상태 관리
 
 #### App.tsx 최종 구조
+
 ```typescript
 const App = () => {
   // 모든 상태와 로직이 Hook으로 분리됨
@@ -753,11 +801,11 @@ const App = () => {
   const { products, filteredProducts, ... } = useProducts({ ... });
   const { cart, totals, ... } = useCart({ ... });
   const { coupons, selectedCoupon, ... } = useCoupon({ ... });
-  
+
   // 이벤트 핸들러들 (App.tsx에 유지 - 단순한 로직이므로 분리 불필요)
   const handleProductSubmit = (e: React.FormEvent) => { /* ... */ };
   const handleCouponSubmit = (e: React.FormEvent) => { /* ... */ };
-  
+
   // 순수한 JSX 렌더링
   return (
     <div className="min-h-screen bg-gray-50">
@@ -770,11 +818,13 @@ const App = () => {
 ### �� 9단계: 폼 상태 분리 구조 검토
 
 #### 검토 배경
+
 useProducts와 useCouponForm의 폼 관련 상태들이 적절히 분리되어 있는지 검토
 
 #### 현재 구조 분석
 
 **useProducts의 폼 관련 상태들**:
+
 ```typescript
 // 상품 도메인 내부의 복잡한 폼 상태
 const [productForm, setProductForm] = useState<ProductForm>({...});
@@ -790,6 +840,7 @@ const startEditProduct = (product: ProductWithUI) => {
 ```
 
 **useCouponForm의 폼 관련 상태들**:
+
 ```typescript
 // 쿠폰 도메인의 단순한 폼 상태
 const [couponForm, setCouponForm] = useState<CouponForm>({...});
@@ -839,6 +890,7 @@ const useProducts = () => {
 ```
 
 #### 학습 포인트
+
 - **도메인 경계 명확화**: 복잡한 도메인 로직은 해당 도메인 Hook에 포함
 - **응집성 원칙**: 관련된 상태들은 같은 Hook에서 관리
 - **과도한 분리 방지**: 단순한 분리보다는 의미있는 분리 우선
@@ -846,6 +898,7 @@ const useProducts = () => {
 ### 🎯 최종 완성도
 
 #### 완료된 Hook 목록 (9개) - 주석 완료
+
 1. **useLocalStorage**: localStorage 관리 ✅
 2. **useNotifications**: 알림 시스템 ✅
 3. **useDebounce**: 검색 성능 최적화 ✅
@@ -857,12 +910,14 @@ const useProducts = () => {
 9. **useCouponForm**: 쿠폰 폼 상태 관리 ✅
 
 #### 코드 품질 개선
+
 - **가독성**: 모든 Hook에 명확한 주석 추가
 - **유지보수성**: 코드 구조와 의도가 명확히 문서화
 - **협업성**: 다른 개발자가 코드를 쉽게 이해 가능
 - **확장성**: 새로운 Hook 추가 시 일관된 주석 패턴 적용
 
 #### 핵심 성과
+
 - **완전한 관심사 분리**: App.tsx가 순수한 UI 컴포넌트로 변환
 - **도메인 서비스 패턴**: 각 도메인별로 Hook과 Service 분리
 - **재사용성**: 모든 Hook이 독립적으로 재사용 가능

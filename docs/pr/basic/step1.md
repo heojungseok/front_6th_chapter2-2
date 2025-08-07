@@ -262,6 +262,7 @@ export const getMaxApplicableDiscount = (
 ### 결론
 
 함수합성은 **"레고 블록 조립"**과 같습니다:
+
 - **작은 블록들**: 각각의 순수함수
 - **조립 과정**: 함수들을 조합해서 복잡한 기능 만들기
 - **결과**: 깔끔하고 유지보수하기 쉬운 코드
@@ -304,6 +305,7 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
 ```
 
 **Hook의 특징:**
+
 - ✅ **React 생명주기와 연동**: useState, useEffect 사용
 - ✅ **상태 관리**: 컴포넌트의 상태를 관리
 - ✅ **재사용 가능**: 여러 컴포넌트에서 사용
@@ -341,6 +343,7 @@ export class ProductModel {
 ```
 
 **Model의 특징:**
+
 - ✅ **순수 함수**: 부수 효과 없음
 - ✅ **데이터 중심**: 비즈니스 로직과 검증
 - ✅ **테스트 용이**: 독립적으로 테스트 가능
@@ -349,6 +352,7 @@ export class ProductModel {
 ### 현재 프로젝트에서의 구분
 
 #### **Hook으로 분리할 것들**
+
 ```typescript
 // hooks/useLocalStorage.ts - 로컬 스토리지 관리
 // hooks/useCart.ts - 장바구니 상태 관리
@@ -357,6 +361,7 @@ export class ProductModel {
 ```
 
 #### **Model로 분리할 것들**
+
 ```typescript
 // models/Product.ts - 상품 검증 및 계산
 // models/Cart.ts - 장바구니 계산 로직
@@ -366,6 +371,7 @@ export class ProductModel {
 ### 실제 차이점 예시
 
 #### **Hook (상태 관리)**
+
 ```typescript
 // hooks/useCart.ts
 export const useCart = () => {
@@ -373,7 +379,9 @@ export const useCart = () => {
 
   const addToCart = useCallback((product: Product) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.product.id === product.id);
+      const existingItem = prevCart.find(
+        item => item.product.id === product.id
+      );
       if (existingItem) {
         return prevCart.map(item =>
           item.product.id === product.id
@@ -390,6 +398,7 @@ export const useCart = () => {
 ```
 
 #### **Model (비즈니스 로직)**
+
 ```typescript
 // models/Cart.ts
 export class CartModel {
@@ -407,7 +416,7 @@ export class CartModel {
 
   static calculateTotal(cart: CartItem[]): number {
     return cart.reduce((total, item) => {
-      return total + (item.product.price * item.quantity);
+      return total + item.product.price * item.quantity;
     }, 0);
   }
 }
@@ -419,6 +428,7 @@ export class CartModel {
 - **Model**: 순수 비즈니스 로직, 데이터 검증, 계산
 
 현재 프로젝트에서는 **Hook 분리**부터 시작하는 것이 맞습니다. 왜냐하면:
+
 1. 로컬 스토리지 관리가 우선
 2. 상태 관리 로직이 복잡함
 3. Model은 이미 `utils/calculators.ts`로 분리됨

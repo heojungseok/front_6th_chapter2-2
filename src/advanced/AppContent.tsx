@@ -8,23 +8,14 @@ import { Header } from './components/layout';
 import { AdminPage, ShoppingPage } from './components/pages';
 
 export const AppContent = () => {
-  const { notifications, removeNotification } =
-    useNotifications();
+  const { notifications, removeNotification } = useNotifications();
 
   const { onClearSelectedCoupon, onApplyCoupon } = useCoupon();
 
-  const {
-    onAddProduct,
-    onUpdateProduct,
-    onDeleteProduct,
-    onStartEditProduct,
-  } = useProducts();
+  const { onAddProduct, onUpdateProduct, onDeleteProduct, onStartEditProduct } =
+    useProducts();
 
-  const {
-    onUpdateQuantity,
-    onCompleteOrder,
-    onRemoveFromCart,
-  } = useCart();
+  const { onUpdateQuantity, onCompleteOrder, onRemoveFromCart } = useCart();
 
   const { isAdmin, onSetActiveTab } = useUIState();
 

@@ -620,6 +620,7 @@ productService (도메인 로직)
 ### 🕐 6단계: useCart Hook 분리 및 쿠폰 적용 문제 해결
 
 #### 작업 배경
+
 장바구니 관련 로직이 App.tsx에 흩어져 있어 관심사 분리 필요
 
 - 장바구니 조작 함수들이 App.tsx에 분산
@@ -629,50 +630,84 @@ productService (도메인 로직)
 #### 도메인 서비스 패턴 적용
 
 **1. cartService 생성 (services/cartService.ts)**
+
 ```typescript
 export const cartService = {
-  addItemToCart: (product, cart) => { /* 장바구니 추가 로직 */ },
-  removeItemFromCart: (productId, cart) => { /* 장바구니 제거 로직 */ },
-  updateItemQuantity: (productId, newQuantity, cart) => { /* 수량 업데이트 로직 */ },
-  calculateTotalItemCount: (cart) => { /* 총 개수 계산 */ },
+  addItemToCart: (product, cart) => {
+    /* 장바구니 추가 로직 */
+  },
+  removeItemFromCart: (productId, cart) => {
+    /* 장바구니 제거 로직 */
+  },
+  updateItemQuantity: (productId, newQuantity, cart) => {
+    /* 수량 업데이트 로직 */
+  },
+  calculateTotalItemCount: cart => {
+    /* 총 개수 계산 */
+  },
 };
 ```
 
 **2. validators에 검증 로직 추가 (utils/validators.ts)**
+
 ```typescript
 export const validateCartOperation = {
-  validateStockAvailability: (product, cart) => { /* 재고 검증 */ },
-  validateQuantityIncrease: (product, currentQuantity) => { /* 수량 증가 검증 */ },
-  validateQuantityChange: (product, newQuantity) => { /* 수량 변경 검증 */ },
+  validateStockAvailability: (product, cart) => {
+    /* 재고 검증 */
+  },
+  validateQuantityIncrease: (product, currentQuantity) => {
+    /* 수량 증가 검증 */
+  },
+  validateQuantityChange: (product, newQuantity) => {
+    /* 수량 변경 검증 */
+  },
 };
 ```
 
 **3. useCart Hook 생성 (hooks/useCart.ts)**
+
 ```typescript
 export const useCart = ({ products, selectedCoupon, addNotification }) => {
   const [cart, setCart] = useLocalStorage('cart', []);
   const [totalItemCount, setTotalItemCount] = useState(0);
-  const [totals, setTotals] = useState({ totalBeforeDiscount: 0, totalAfterDiscount: 0 });
+  const [totals, setTotals] = useState({
+    totalBeforeDiscount: 0,
+    totalAfterDiscount: 0,
+  });
 
   useEffect(() => {
     const calculatedTotals = calculateCartTotal(cart, selectedCoupon);
     setTotals(calculatedTotals);
   }, [cart, selectedCoupon]);
 
-  const addToCart = useCallback((product) => {
-    // 검증 → 비즈니스 로직 → 상태 업데이트 순서
-    const stockValidation = validateCartOperation.validateStockAvailability(product, cart);
-    if (!stockValidation.isValid) {
-      addNotification(stockValidation.message, 'error');
-      return;
-    }
-    
-    const newCart = cartService.addItemToCart(product, cart);
-    setCart(newCart);
-    addNotification('장바구니에 담았습니다', 'success');
-  }, [cart, addNotification]);
+  const addToCart = useCallback(
+    product => {
+      // 검증 → 비즈니스 로직 → 상태 업데이트 순서
+      const stockValidation = validateCartOperation.validateStockAvailability(
+        product,
+        cart
+      );
+      if (!stockValidation.isValid) {
+        addNotification(stockValidation.message, 'error');
+        return;
+      }
 
-  return { cart, totalItemCount, totals, addToCart, removeFromCart, updateQuantity, completeOrder };
+      const newCart = cartService.addItemToCart(product, cart);
+      setCart(newCart);
+      addNotification('장바구니에 담았습니다', 'success');
+    },
+    [cart, addNotification]
+  );
+
+  return {
+    cart,
+    totalItemCount,
+    totals,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    completeOrder,
+  };
 };
 ```
 
@@ -683,6 +718,7 @@ export const useCart = ({ products, selectedCoupon, addNotification }) => {
 **증상**: `TestingLibraryElementError: Unable to find an element with the text: 할인 금액`
 
 **원인 분석 과정**:
+
 1. **UI 렌더링 문제 의심** → App.tsx에서 "할인 금액" 표시 조건 확인
 2. **totals 계산 문제 발견** → useCart에서 selectedCoupon을 사용하지 않음
 3. **순환 의존성 문제 확인** → Hook 호출 순서 문제
@@ -708,6 +744,7 @@ useEffect(() => {
 ### �� 7단계: UI 상태 관리 Hook 분리
 
 #### 작업 배경
+
 App.tsx에서 UI 관련 상태들이 여전히 남아있어 완전한 관심사 분리 필요
 
 - isAdmin, activeTab, showCouponForm 등 UI 상태들이 App.tsx에 분산
@@ -717,12 +754,15 @@ App.tsx에서 UI 관련 상태들이 여전히 남아있어 완전한 관심사 
 #### UI 상태 Hook 분리
 
 **1. useUIState Hook 생성 (hooks/useUIState.ts)**
+
 ```typescript
 export const useUIState = () => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
+    'products'
+  );
   const [showCouponForm, setShowCouponForm] = useState(false);
-  
+
   return {
     isAdmin,
     activeTab,
@@ -735,6 +775,7 @@ export const useUIState = () => {
 ```
 
 **2. useCouponForm Hook 생성 (hooks/useCouponForm.ts)**
+
 ```typescript
 export const useCouponForm = () => {
   const [couponForm, setCouponForm] = useState<CouponForm>({
@@ -743,7 +784,7 @@ export const useCouponForm = () => {
     discountType: 'amount' as 'amount' | 'percentage',
     discountValue: 0,
   });
-  
+
   const resetCouponForm = useCallback(() => {
     setCouponForm({
       name: '',
@@ -752,7 +793,7 @@ export const useCouponForm = () => {
       discountValue: 0,
     });
   }, []);
-  
+
   return {
     couponForm,
     setCouponForm,
@@ -768,6 +809,7 @@ export const useCouponForm = () => {
 **증상**: `Cannot redeclare block-scoped variable 'showProductForm'`
 
 **원인 분석**:
+
 1. **useProducts에서 showProductForm 관리**
 2. **useUIState에서도 showProductForm 관리하려고 시도**
 3. **변수명 충돌 발생**
@@ -786,7 +828,9 @@ const useProducts = () => {
 // ✅ useUIState에서는 전역 UI 상태만 관리
 const useUIState = () => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'coupons'>(
+    'products'
+  );
   const [showCouponForm, setShowCouponForm] = useState(false); // 쿠폰 폼은 UI 상태
 };
 ```
@@ -796,18 +840,21 @@ const useUIState = () => {
 **검토 결과**: 이벤트 핸들러는 분리하지 않기로 결정
 
 **이유**:
+
 - **단순한 로직**: 복잡한 비즈니스 로직이 아닌 단순한 이벤트 처리
 - **App.tsx 특화**: 이 핸들러들은 App.tsx에서만 사용됨
 - **과도한 추상화 방지**: 작은 함수를 Hook으로 만드는 것은 과도한 분리
 - **의존성 복잡성**: 여러 Hook의 함수들을 주입받아야 해서 복잡해짐
 
 #### 해결된 문제
+
 - **UI 상태 분리**: isAdmin, activeTab, showCouponForm을 useUIState로 분리
 - **폼 상태 분리**: couponForm 상태를 useCouponForm으로 분리
 - **도메인 경계 명확화**: 상품 관련 상태는 useProducts, 쿠폰 관련 상태는 useCoupon
 - **변수명 충돌 해결**: 데이터 소유권 원칙으로 충돌 방지
 
 #### 아키텍처 개선
+
 App.tsx (UI 렌더링 + 이벤트 핸들러)
 ↓ 의존성 주입
 useUIState + useCouponForm (UI 상태 관리)
@@ -817,6 +864,7 @@ useProducts + useCart + useCoupon (도메인 로직)
 ### �� 완료 및 문서화
 
 #### 완료된 Hook 목록
+
 1. **useLocalStorage**: localStorage 관리 (70% 코드 중복 제거)
 2. **useNotifications**: 알림 시스템 캡슐화
 3. **useDebounce**: 검색 성능 최적화 (80% 연산 감소)
@@ -828,6 +876,7 @@ useProducts + useCart + useCoupon (도메인 로직)
 9. **useCouponForm**: 쿠폰 폼 상태 관리
 
 #### 핵심 성과
+
 - **완전한 관심사 분리**: App.tsx가 순수한 UI 컴포넌트로 변환
 - **도메인 서비스 패턴**: 각 도메인별로 Hook과 Service 분리
 - **재사용성**: 모든 Hook이 독립적으로 재사용 가능
@@ -835,7 +884,9 @@ useProducts + useCart + useCoupon (도메인 로직)
 - **유지보수성**: 코드 구조가 명확하고 확장 가능
 
 #### 학습 포인트
+
 **UI 상태 분리에서 배운 것**:
+
 - **도메인 경계 명확화**: 상품 관련 상태는 useProducts, 쿠폰 관련 상태는 useCoupon
 - **UI 상태 분리**: 전역 UI 상태만 useUIState에서 관리
 - **응집성 원칙**: 관련된 상태들은 같은 Hook에서 관리

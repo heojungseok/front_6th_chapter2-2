@@ -120,6 +120,7 @@ const ProductList = () => {
 ## 🎯 실제 적용 단계 진행 방법
 
 ### **1단계: 액션 Atoms 생성** (상태 변경 로직)
+
 ```typescript
 // atoms/productAtoms.ts에 추가
 export const addProductAtom = atom(
@@ -132,18 +133,20 @@ export const addProductAtom = atom(
 ```
 
 ### **2단계: Custom Hooks 전환** (atoms 기반)
+
 ```typescript
 // hooks/useProductAtoms.ts 생성
 export const useProductAtoms = () => {
   const [products, setProducts] = useAtom(productsAtom);
   const filteredProducts = useAtomValue(filteredProductsAtom);
   const addProduct = useSetAtom(addProductAtom);
-  
+
   return { products, filteredProducts, addProduct };
 };
 ```
 
 ### **3단계: App.tsx 리팩토링** (Provider 추가)
+
 ```typescript
 // App.tsx
 import { Provider } from 'jotai';
@@ -158,18 +161,20 @@ const App = () => {
 ```
 
 ### **4단계: 컴포넌트 전환** (atoms 직접 구독)
+
 ```typescript
 // AdminPage.tsx
 export const AdminPage = () => {
   const activeTab = useAtomValue(activeTabAtom);
   const products = useAtomValue(productsAtom);
   // props 받지 않고 atoms 직접 사용
-  
+
   return <div>{/* 렌더링 */}</div>;
 };
 ```
 
 ### **5단계: Props 제거** (23개 → 0개)
+
 ```typescript
 // Before: 23개 props
 <AdminPage activeTab={activeTab} products={products} ... />
@@ -187,7 +192,7 @@ export const AdminPage = () => {
 
 # Q. 갑자기 다시 궁금해졌는데 atom 은 엔티티 컴포넌트에 관련된 비즈니스로직을 전역상태로 관리하는 개념인거야?
 
-아니요! 그건 **Redux**나 **Zustand** 같은 전통적인 전역 상태 관리 라이브러리의 개념입니다. 
+아니요! 그건 **Redux**나 **Zustand** 같은 전통적인 전역 상태 관리 라이브러리의 개념입니다.
 
 ## 🎯 Jotai의 핵심 철학
 
@@ -196,6 +201,7 @@ Jotai는 **"전역 상태 관리"**가 아니라 **"원자적 상태 관리"**�
 ### **Jotai vs 전통적인 전역 상태 관리**
 
 #### **Redux/Zustand (전통적 방식)**
+
 ```typescript
 // ❌ 전역 스토어에 모든 비즈니스 로직 집중
 const store = {
@@ -203,17 +209,22 @@ const store = {
   cart: [],
   coupons: [],
   // 모든 상태가 하나의 거대한 객체에
-  addProduct: (product) => { /* 복잡한 로직 */ },
-  updateCart: (item) => { /* 복잡한 로직 */ }
+  addProduct: product => {
+    /* 복잡한 로직 */
+  },
+  updateCart: item => {
+    /* 복잡한 로직 */
+  },
 };
 ```
 
 #### **Jotai (원자적 방식)**
+
 ```typescript
 // ✅ 작은 단위로 분산된 상태
-const productsAtom = atom([]);           // 상품만
-const cartAtom = atom([]);               // 장바구니만  
-const searchTermAtom = atom('');         // 검색어만
+const productsAtom = atom([]); // 상품만
+const cartAtom = atom([]); // 장바구니만
+const searchTermAtom = atom(''); // 검색어만
 
 // 필요한 곳에서만 조합
 const filteredProductsAtom = atom(get => {
@@ -226,14 +237,17 @@ const filteredProductsAtom = atom(get => {
 ## 💡 Jotai의 핵심 아이디어
 
 ### **1. 원자적 단위 (Atomic)**
+
 - 각 atom은 **하나의 작은 상태**만 담당
 - 비즈니스 로직이 아니라 **순수한 데이터**
 
 ### **2. 조합 가능 (Composable)**
+
 - 작은 atoms를 조합해서 복잡한 상태 생성
 - 필요할 때만 조합, 불필요한 의존성 없음
 
 ### **3. 지역적 접근 (Local Access)**
+
 - 컴포넌트가 필요한 atoms만 구독
 - 전역이지만 **지역적으로 사용**
 
@@ -267,12 +281,12 @@ const filteredProductsAtom = atom(get => {
 
 ## �� 핵심 차이점
 
-| 구분 | 전통적 전역 상태 | Jotai |
-|------|------------------|-------|
-| **단위** | 거대한 스토어 | 작은 atoms |
-| **조합** | 미리 정의된 구조 | 필요시 조합 |
-| **접근** | 전체 스토어 접근 | 필요한 atoms만 |
-| **의존성** | 강한 결합 | 느슨한 결합 |
+| 구분       | 전통적 전역 상태 | Jotai          |
+| ---------- | ---------------- | -------------- |
+| **단위**   | 거대한 스토어    | 작은 atoms     |
+| **조합**   | 미리 정의된 구조 | 필요시 조합    |
+| **접근**   | 전체 스토어 접근 | 필요한 atoms만 |
+| **의존성** | 강한 결합        | 느슨한 결합    |
 
 ## �� 결론
 
@@ -290,33 +304,36 @@ Jotai는 **"비즈니스 로직을 전역으로 관리"**하는 것이 아니라
 ## 💡 Jotai의 핵심 개념 정리
 
 ### **1. 잘개 쪼개진 데이터 단위**
+
 ```typescript
 // ✅ 각각이 독립적인 작은 데이터 단위
-const searchTermAtom = atom('');           // 검색어만
-const isAdminAtom = atom(false);           // 관리자 여부만
-const cartAtom = atom([]);                 // 장바구니만
-const selectedCouponAtom = atom(null);     // 선택된 쿠폰만
+const searchTermAtom = atom(''); // 검색어만
+const isAdminAtom = atom(false); // 관리자 여부만
+const cartAtom = atom([]); // 장바구니만
+const selectedCouponAtom = atom(null); // 선택된 쿠폰만
 ```
 
 ### **2. 관리 = 구독 + 변경**
 
 #### **구독 (Subscription)**
+
 ```typescript
 // 컴포넌트에서 atoms 구독
 const ProductList = () => {
   const products = useAtomValue(productsAtom);        // 읽기 구독
   const searchTerm = useAtomValue(searchTermAtom);    // 읽기 구독
-  
+
   return <div>{/* 렌더링 */}</div>;
 };
 ```
 
 #### **변경 (Mutation)**
+
 ```typescript
 // 컴포넌트에서 atoms 변경
 const SearchBar = () => {
   const setSearchTerm = useSetAtom(searchTermAtom);   // 쓰기 구독
-  
+
   return (
     <input onChange={(e) => setSearchTerm(e.target.value)} />
   );
@@ -326,10 +343,12 @@ const SearchBar = () => {
 ## �� 핵심 포인트
 
 ### **"관리"의 의미**
+
 - **구독**: "이 데이터가 변경되면 나도 업데이트할게"
 - **변경**: "이 데이터를 새로운 값으로 바꿔줘"
 
 ### **자동 동기화**
+
 ```typescript
 // searchTerm이 변경되면 자동으로 구독하는 모든 컴포넌트 업데이트
 const SearchBar = () => {
@@ -346,6 +365,7 @@ const ProductList = () => {
 ## �� 비유로 이해하기
 
 ### **구독 = 신문 구독**
+
 ```typescript
 // "이 신문이 나오면 나도 받을게"
 const Component = () => {
@@ -354,6 +374,7 @@ const Component = () => {
 ```
 
 ### **변경 = 신문 발행**
+
 ```typescript
 // "새로운 신문을 발행할게"
 const Component = () => {

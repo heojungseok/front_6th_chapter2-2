@@ -1,5 +1,5 @@
-import { CartItem, ProductWithUI } from "../types";
-import { getRemainingStock } from "./calculators";
+import { CartItem, ProductWithUI } from '../types';
+import { getRemainingStock } from './calculators';
 
 /**
  * 검증 결과 인터페이스
@@ -78,17 +78,20 @@ export const validateCartOperation = {
     return {
       isValid: remainingStock > 0,
       message: '재고가 부족합니다!',
-      remainingStock
+      remainingStock,
     };
   },
 
   // 수량 증가 가능 검증
-  validateQuantityIncrease: (product: ProductWithUI, currentQuantity: number) => {
+  validateQuantityIncrease: (
+    product: ProductWithUI,
+    currentQuantity: number
+  ) => {
     const newQuantity = currentQuantity + 1;
     return {
       isValid: newQuantity <= product.stock,
       message: `재고는 ${product.stock}개까지만 있습니다.`,
-      newQuantity
+      newQuantity,
     };
   },
 
@@ -98,7 +101,7 @@ export const validateCartOperation = {
       return {
         isValid: false,
         message: '수량은 1개 이상이어야 합니다.',
-        action: 'remove'
+        action: 'remove',
       };
     }
 
@@ -106,14 +109,14 @@ export const validateCartOperation = {
       return {
         isValid: false,
         message: `재고는 ${product.stock}개까지만 있습니다.`,
-        action: 'limit'
+        action: 'limit',
       };
     }
 
     return {
       isValid: true,
       message: '',
-      action: 'update'
+      action: 'update',
     };
-  }
+  },
 };

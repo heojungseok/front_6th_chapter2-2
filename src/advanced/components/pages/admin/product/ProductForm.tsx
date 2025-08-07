@@ -2,7 +2,10 @@ import React from 'react';
 import { useAtom } from 'jotai';
 import { Button, Input } from '../../../ui';
 import { productService } from '../../../../services/productService';
-import { productFormAtom, editingProductAtom } from '../../../../atoms/productAtoms';
+import {
+  productFormAtom,
+  editingProductAtom,
+} from '../../../../atoms/productAtoms';
 import { useNotifications } from '../../../../hooks/useNotifications';
 
 interface ProductFormProps {

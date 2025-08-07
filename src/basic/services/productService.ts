@@ -4,7 +4,7 @@ import { validatePrice, validateStock } from '../utils/validators';
 export const productService = {
   // 가격 검증 - utils에서 import
   validatePrice: (value: string) => validatePrice(value),
-  
+
   // 재고 검증 - utils에서 import
   validateStock: (value: string) => validateStock(value),
 

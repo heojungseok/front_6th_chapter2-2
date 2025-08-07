@@ -9,10 +9,7 @@ const MAX_DISCOUNT_RATE = 0.5;
 const roundToInteger = (value: number): number => Math.round(value);
 
 // 할인 계산 관련 함수들 - 중간 수준 분리
-const calculateBaseDiscount = (
-  discounts: any[],
-  quantity: number
-): number => {
+const calculateBaseDiscount = (discounts: any[], quantity: number): number => {
   return discounts.reduce((maxDiscount, discount) => {
     return quantity >= discount.quantity && discount.rate > maxDiscount
       ? discount.rate
@@ -32,12 +29,15 @@ export const getMaxApplicableDiscount = (
   item: CartItem,
   cart: CartItem[]
 ): number => {
-  const baseDiscount = calculateBaseDiscount(item.product.discounts, item.quantity);
-  
+  const baseDiscount = calculateBaseDiscount(
+    item.product.discounts,
+    item.quantity
+  );
+
   if (hasBulkPurchase(cart)) {
     return applyBulkPurchaseDiscount(baseDiscount);
   }
-  
+
   return baseDiscount;
 };
 
@@ -53,10 +53,7 @@ export const calculateItemTotal = (
 };
 
 // 쿠폰 적용 로직 - 의미 있는 단위로 분리
-const applyCouponDiscount = (
-  total: number,
-  coupon: Coupon
-): number => {
+const applyCouponDiscount = (total: number, coupon: Coupon): number => {
   if (coupon.discountType === 'amount') {
     return Math.max(0, total - coupon.discountValue);
   } else {
@@ -81,7 +78,10 @@ export const calculateCartTotal = (
   });
 
   if (selectedCoupon) {
-    totalAfterDiscount = applyCouponDiscount(totalAfterDiscount, selectedCoupon);
+    totalAfterDiscount = applyCouponDiscount(
+      totalAfterDiscount,
+      selectedCoupon
+    );
   }
 
   return {

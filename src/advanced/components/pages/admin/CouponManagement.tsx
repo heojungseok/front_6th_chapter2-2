@@ -48,10 +48,7 @@ export const CouponManagement: React.FC = () => {
         </div>
 
         {showCouponForm && (
-          <CouponForm
-            onSubmit={handleCouponSubmit}
-            onCancel={handleCancel}
-          />
+          <CouponForm onSubmit={handleCouponSubmit} onCancel={handleCancel} />
         )}
       </div>
     </section>

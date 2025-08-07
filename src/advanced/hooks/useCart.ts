@@ -1,8 +1,11 @@
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
-import { cartAtom, totalItemCountAtom, cartTotalsAtom, addToCartAtom } from '../atoms/cartAtoms';
+import {
+  cartAtom,
+  totalItemCountAtom,
+  cartTotalsAtom,
+} from '../atoms/cartAtoms';
 import { productsAtom } from '../atoms/productAtoms';
-import { selectedCouponAtom } from '../atoms/couponAtoms';
 import { generateOrderNumber } from '../utils/generators';
 import { cartService } from '../services/cartService';
 import { validateCartOperation } from '../utils/validators';
