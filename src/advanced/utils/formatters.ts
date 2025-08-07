@@ -1,7 +1,7 @@
 export const formatPrice = (
   price: number,
-  isAdmin: boolean = false,
-  isSoldOut: boolean = false
+  isSoldOut: boolean = false,
+  isAdmin: boolean = false
 ): string => {
   if (isSoldOut) {
     return 'SOLD OUT';
@@ -11,5 +11,6 @@ export const formatPrice = (
     return `${price.toLocaleString()}원`;
   }
 
-  return `₩${price.toLocaleString()}`;
+  // 테스트에서 기대하는 형식으로 변경
+  return `${price.toLocaleString()}원`;
 };

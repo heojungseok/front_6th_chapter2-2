@@ -49,8 +49,8 @@ export const ProductTable: React.FC<ProductTableProps> = ({
               <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                 {formatPrice(
                   product.price,
-                  isAdmin,
-                  getRemainingStock(product, cart) <= 0
+                  getRemainingStock(product, cart) <= 0,
+                  isAdmin
                 )}
               </td>
               <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>

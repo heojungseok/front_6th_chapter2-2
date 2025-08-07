@@ -4,6 +4,7 @@ import { CartItem } from './CartItem';
 import { Button } from '../../../ui';
 import { cartAtom, cartTotalsAtom } from '../../../../atoms/cartAtoms';
 import { couponsAtom, selectedCouponAtom } from '../../../../atoms/couponAtoms';
+import { formatPrice } from '../../../../utils/formatters';
 
 interface CartSidebarProps {
   onUpdateQuantity: (productId: string, quantity: number) => void;
@@ -20,7 +21,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
   onClearSelectedCoupon,
   onCompleteOrder,
 }) => {
-  // Jotai atoms로 상태 관리
+  // Jotai atoms 사용
   const [cart] = useAtom(cartAtom);
   const [coupons] = useAtom(couponsAtom);
   const [selectedCoupon] = useAtom(selectedCouponAtom);
@@ -121,21 +122,19 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
               <div className='flex justify-between'>
                 <span className='text-gray-600'>상품 금액</span>
                 <span className='font-medium'>
-                  {totals.totalBeforeDiscount.toLocaleString()}원
+                  {formatPrice(totals.totalBeforeDiscount)}
                 </span>
               </div>
               {selectedCoupon && (
                 <div className='flex justify-between text-red-500'>
                   <span>할인 금액</span>
-                  <span>
-                    -{selectedCoupon.discountValue.toLocaleString()}원
-                  </span>
+                  <span>-{formatPrice(totals.totalBeforeDiscount - totals.totalAfterDiscount)}</span>
                 </div>
               )}
               <div className='flex justify-between py-2 border-t border-gray-200'>
                 <span className='font-semibold'>결제 예정 금액</span>
                 <span className='font-bold text-lg text-gray-900'>
-                  {totals.totalAfterDiscount.toLocaleString()}원
+                  {formatPrice(totals.totalAfterDiscount)}
                 </span>
               </div>
             </div>
@@ -145,7 +144,7 @@ export const CartSidebar: React.FC<CartSidebarProps> = ({
               variant='primary'
               className='w-full mt-4'
             >
-              {totals.totalAfterDiscount.toLocaleString()}원 결제하기
+              {formatPrice(totals.totalAfterDiscount)}원 결제하기
             </Button>
 
             <div className='mt-3 text-xs text-gray-500 text-center'>
