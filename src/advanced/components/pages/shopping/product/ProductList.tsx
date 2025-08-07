@@ -1,26 +1,20 @@
 import React from 'react';
-import { ProductWithUI } from '../../../../types';
+import { useAtom, useSetAtom } from 'jotai';
 import { ProductCard } from './ProductCard';
 import { getRemainingStock } from '../../../../utils/calculators';
 import { formatPrice } from '../../../../utils/formatters';
+import { productsAtom, filteredProductsAtom } from '../../../../atoms/productAtoms';
+import { cartAtom, addToCartAtom } from '../../../../atoms/cartAtoms';
+import { searchTermAtom, isAdminAtom } from '../../../../atoms/uiAtoms';
 
-interface ProductListProps {
-  products: ProductWithUI[];
-  filteredProducts: ProductWithUI[];
-  cart: Array<{ product: ProductWithUI; quantity: number }>;
-  searchTerm: string;
-  isAdmin: boolean;
-  onAddToCart: (product: ProductWithUI) => void;
-}
+export const ProductList: React.FC = () => {
+  const [products] = useAtom(productsAtom);
+  const [filteredProducts] = useAtom(filteredProductsAtom);
+  const [cart] = useAtom(cartAtom);
+  const [searchTerm] = useAtom(searchTermAtom);
+  const [isAdmin] = useAtom(isAdminAtom);
+  const addToCart = useSetAtom(addToCartAtom);
 
-export const ProductList: React.FC<ProductListProps> = ({
-  products,
-  filteredProducts,
-  cart,
-  searchTerm,
-  isAdmin,
-  onAddToCart,
-}) => {
   return (
     <section>
       <div className='mb-6 flex justify-between items-center'>
@@ -40,9 +34,9 @@ export const ProductList: React.FC<ProductListProps> = ({
             <ProductCard
               key={product.id}
               product={product}
-              onAddToCart={onAddToCart}
+              onAddToCart={addToCart}
               getRemainingStock={product => getRemainingStock(product, cart)}
-              formatPrice={(price, productId) =>
+              formatPrice={(price) =>
                 formatPrice(
                   price,
                   isAdmin,

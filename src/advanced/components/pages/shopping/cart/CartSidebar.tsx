@@ -1,26 +1,11 @@
 import React from 'react';
-import { ProductWithUI } from '../../../../types';
+import { useAtom } from 'jotai';
 import { CartItem } from './CartItem';
 import { Button } from '../../../ui';
+import { cartAtom, cartTotalsAtom } from '../../../../atoms/cartAtoms';
+import { couponsAtom, selectedCouponAtom } from '../../../../atoms/couponAtoms';
 
 interface CartSidebarProps {
-  cart: Array<{ product: ProductWithUI; quantity: number }>;
-  coupons: Array<{
-    code: string;
-    name: string;
-    discountType: 'amount' | 'percentage';
-    discountValue: number;
-  }>;
-  selectedCoupon: {
-    code: string;
-    name: string;
-    discountType: 'amount' | 'percentage';
-    discountValue: number;
-  } | null;
-  totals: {
-    totalBeforeDiscount: number;
-    totalAfterDiscount: number;
-  };
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onRemoveFromCart: (productId: string) => void;
   onApplyCoupon: (coupon: any) => void;
@@ -29,16 +14,18 @@ interface CartSidebarProps {
 }
 
 export const CartSidebar: React.FC<CartSidebarProps> = ({
-  cart,
-  coupons,
-  selectedCoupon,
-  totals,
   onUpdateQuantity,
   onRemoveFromCart,
   onApplyCoupon,
   onClearSelectedCoupon,
   onCompleteOrder,
 }) => {
+  // Jotai atoms로 상태 관리
+  const [cart] = useAtom(cartAtom);
+  const [coupons] = useAtom(couponsAtom);
+  const [selectedCoupon] = useAtom(selectedCouponAtom);
+  const [totals] = useAtom(cartTotalsAtom);
+
   return (
     <div className='sticky top-24 space-y-4'>
       {/* 장바구니 섹션 */}

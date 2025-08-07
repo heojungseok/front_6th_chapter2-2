@@ -16,15 +16,12 @@ export const AppContent = () => {
   const { debouncedSearchTerm } = useSearch();
 
   const {
-    coupons,
-    selectedCoupon,
     onClearSelectedCoupon,
     onApplyCoupon,
   } = useCoupon();
 
   const {
     products,
-    filteredProducts,
     onAddProduct,
     onUpdateProduct,
     onDeleteProduct,
@@ -36,21 +33,15 @@ export const AppContent = () => {
   });
 
   const {
-    cart,
-    onAddToCart,
     onUpdateQuantity,
     onCompleteOrder,
     onRemoveFromCart,
-    totals,
   } = useCart({
     products,
     addNotification,
   });
 
-  const {
-    isAdmin,
-    onSetActiveTab,
-  } = useUIState();
+  const { isAdmin, onSetActiveTab } = useUIState();
 
   return (
     <div className='min-h-screen bg-gray-50'>
@@ -79,15 +70,6 @@ export const AppContent = () => {
           />
         ) : (
           <ShoppingPage
-            products={products}
-            filteredProducts={filteredProducts}
-            cart={cart}
-            coupons={coupons}
-            selectedCoupon={selectedCoupon}
-            totals={totals}
-            searchTerm={debouncedSearchTerm}
-            isAdmin={isAdmin}
-            onAddToCart={onAddToCart}
             onUpdateQuantity={onUpdateQuantity}
             onRemoveFromCart={onRemoveFromCart}
             onApplyCoupon={onApplyCoupon}

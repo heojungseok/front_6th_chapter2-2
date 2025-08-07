@@ -2,9 +2,11 @@ import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { calculateCartTotal } from '../utils/calculators';
 import { selectedCouponAtom } from './couponAtoms';
+import { cartService } from '../services/cartService';
+import { ProductWithUI } from '../types';
 
 export interface CartItem {
-  product: any;
+  product: ProductWithUI;
   quantity: number;
 }
 
@@ -22,4 +24,11 @@ export const cartTotalsAtom = atom(get => {
   const cart = get(cartAtom);
   const selectedCoupon = get(selectedCouponAtom);
   return calculateCartTotal(cart, selectedCoupon);
+});
+
+// 액션 atom: 장바구니에 상품 추가
+export const addToCartAtom = atom(null, (get, set, product: ProductWithUI) => {
+  const cart = get(cartAtom);
+  const newCart = cartService.addItemToCart(product, cart);
+  set(cartAtom, newCart);
 });
