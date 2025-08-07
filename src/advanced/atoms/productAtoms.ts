@@ -17,7 +17,7 @@ export const productFormAtom = atom({
   discounts: [] as Array<{ quantity: number; rate: number }>,
 });
 
-// 파생 atom: 검색어로 필터링된 상품 목록
+// 파생 atom: 검색어로 필터링된 상품 목록 (이름과 설명 모두 검색)
 export const filteredProductsAtom = atom(get => {
   const products = get(productsAtom);
   const searchTerm = get(searchTermAtom);
@@ -25,6 +25,7 @@ export const filteredProductsAtom = atom(get => {
   if (!searchTerm.trim()) return products;
 
   return products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 });

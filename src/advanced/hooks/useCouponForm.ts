@@ -16,6 +16,7 @@ export const useCouponForm = () => {
 
   const resetCouponForm = useCallback(() => {
     setCouponForm({
+      id: '',
       name: '',
       code: '',
       discountType: 'amount',

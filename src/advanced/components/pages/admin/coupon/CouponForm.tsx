@@ -1,28 +1,20 @@
 import React from 'react';
+import { useAtom } from 'jotai';
+import { couponFormAtom } from '../../../../atoms/couponAtoms';
+import { useNotifications } from '../../../../hooks/useNotifications';
 
 interface CouponFormProps {
-  couponForm: {
-    name: string;
-    code: string;
-    discountType: 'amount' | 'percentage';
-    discountValue: number;
-  };
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
-  setCouponForm: (form: any) => void;
-  addNotification: (
-    message: string,
-    type: 'error' | 'success' | 'warning'
-  ) => void; // 타입 수정
 }
 
 export const CouponForm: React.FC<CouponFormProps> = ({
-  couponForm,
   onSubmit,
   onCancel,
-  setCouponForm,
-  addNotification,
 }) => {
+  const [couponForm, setCouponForm] = useAtom(couponFormAtom);
+  const { addNotification } = useNotifications();
+
   return (
     <div className='mt-6 p-4 bg-gray-50 rounded-lg'>
       <form onSubmit={onSubmit} className='space-y-4'>

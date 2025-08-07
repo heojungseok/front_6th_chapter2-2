@@ -1,10 +1,10 @@
 import { useAtom } from 'jotai';
-import { useState, useCallback, useEffect } from 'react';
-import { productsAtom } from '../atoms/productAtoms';
+import { useCallback, useEffect } from 'react';
+import { productsAtom, editingProductAtom, productFormAtom, filteredProductsAtom } from '../atoms/productAtoms';
+import { showProductFormAtom } from '../atoms/uiAtoms';
 import { initialProducts } from '../data/initialData';
 import { productService } from '../services/productService';
 import { ProductWithUI, ProductForm } from '../types';
-import { filterProducts } from '../utils/filters';
 
 /**
  * 상품 관리 Hook의 Props 인터페이스
@@ -34,16 +34,10 @@ export const useProducts = ({
   addNotification,
 }: useProductProps) => {
   const [products, setProducts] = useAtom(productsAtom);
-  const [filteredProducts, setFilteredProducts] = useState<ProductWithUI[]>([]);
-  const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [productForm, setProductForm] = useState<ProductForm>({
-    name: '',
-    price: 0,
-    stock: 0,
-    description: '',
-    discounts: [],
-  });
-  const [showProductForm, setShowProductForm] = useState(false);
+  const [filteredProducts] = useAtom(filteredProductsAtom);
+  const [editingProduct, setEditingProduct] = useAtom(editingProductAtom);
+  const [productForm, setProductForm] = useAtom(productFormAtom);
+  const [showProductForm, setShowProductForm] = useAtom(showProductFormAtom);
 
   useEffect(() => {
     if (products.length === 0) {
@@ -51,12 +45,7 @@ export const useProducts = ({
     }
   }, [products, setProducts]);
 
-  useEffect(() => {
-    const filtered = filterProducts(products, searchTerm);
-    setFilteredProducts(filtered);
-  }, [products, searchTerm]);
-
-  const onStartEditProduct = (product: ProductWithUI) => {
+  const onStartEditProduct = useCallback((product: ProductWithUI) => {
     setEditingProduct(product.id);
     setProductForm({
       name: product.name,
@@ -66,7 +55,7 @@ export const useProducts = ({
       discounts: product.discounts || [],
     });
     setShowProductForm(true);
-  };
+  }, [setEditingProduct, setProductForm, setShowProductForm]);
 
   const resetProductForm = useCallback(() => {
     setProductForm({
@@ -78,7 +67,7 @@ export const useProducts = ({
     });
     setEditingProduct(null);
     setShowProductForm(false);
-  }, []);
+  }, [setProductForm, setEditingProduct, setShowProductForm]);
 
   const onAddProduct = useCallback(
     (product: ProductForm) => {
@@ -86,7 +75,7 @@ export const useProducts = ({
       setProducts(prev => [...prev, newProduct]);
       addNotification('상품이 추가되었습니다.', 'success');
     },
-    [addNotification]
+    [setProducts, addNotification]
   );
 
   const onUpdateProduct = useCallback(
@@ -96,7 +85,7 @@ export const useProducts = ({
       });
       addNotification('상품이 수정되었습니다.', 'success');
     },
-    [addNotification]
+    [setProducts, addNotification]
   );
 
   const onDeleteProduct = useCallback(
@@ -105,7 +94,7 @@ export const useProducts = ({
       setProducts(updatedProduct);
       addNotification('상품이 삭제되었습니다.', 'success');
     },
-    [addNotification]
+    [products, setProducts, addNotification]
   );
 
   return {

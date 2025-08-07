@@ -1,51 +1,33 @@
 import React from 'react';
+import { useAtom } from 'jotai';
 import { ProductWithUI } from '../../../types';
 import { ProductTable } from './product/ProductTable';
 import { ProductForm } from './product/ProductForm';
 import { AddProductButton } from './product/AddProductButton';
+import { productsAtom, editingProductAtom, productFormAtom } from '../../../atoms/productAtoms';
+import { cartAtom } from '../../../atoms/cartAtoms';
+import { isAdminAtom, showProductFormAtom } from '../../../atoms/uiAtoms';
 
 interface ProductManagementProps {
-  products: ProductWithUI[];
-  productForm: {
-    name: string;
-    price: number;
-    stock: number;
-    description: string;
-    discounts: Array<{ quantity: number; rate: number }>;
-  };
-  editingProduct: string | null;
-  showProductForm: boolean;
-  cart: any[];
-  isAdmin: boolean;
   onAddProduct: (product: any) => void;
   onUpdateProduct: (productId: string, updates: any) => void;
   onDeleteProduct: (productId: string) => void;
   onStartEditProduct: (product: ProductWithUI) => void;
-  setProductForm: (form: any) => void;
-  setEditingProduct: (productId: string | null) => void;
-  setShowProductForm: (show: boolean) => void;
-  addNotification: (
-    message: string,
-    type: 'error' | 'success' | 'warning'
-  ) => void;
 }
 
 export const ProductManagement: React.FC<ProductManagementProps> = ({
-  products,
-  productForm,
-  editingProduct,
-  showProductForm,
-  cart,
-  isAdmin,
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
   onStartEditProduct,
-  setProductForm,
-  setEditingProduct,
-  setShowProductForm,
-  addNotification,
 }) => {
+  const [products] = useAtom(productsAtom);
+  const [cart] = useAtom(cartAtom);
+  const [isAdmin] = useAtom(isAdminAtom);
+  const [showProductForm, setShowProductForm] = useAtom(showProductFormAtom);
+  const [editingProduct, setEditingProduct] = useAtom(editingProductAtom);
+  const [productForm, setProductForm] = useAtom(productFormAtom);
+
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingProduct && editingProduct !== 'new') {
@@ -107,12 +89,8 @@ export const ProductManagement: React.FC<ProductManagementProps> = ({
 
       {showProductForm && (
         <ProductForm
-          productForm={productForm}
-          editingProduct={editingProduct}
           onSubmit={handleProductSubmit}
           onCancel={handleCancel}
-          setProductForm={setProductForm}
-          addNotification={addNotification}
         />
       )}
     </section>
