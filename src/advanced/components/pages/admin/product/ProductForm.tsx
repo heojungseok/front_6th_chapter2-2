@@ -1,33 +1,23 @@
 import React from 'react';
+import { useAtom } from 'jotai';
 import { Button, Input } from '../../../ui';
 import { productService } from '../../../../services/productService';
+import { productFormAtom, editingProductAtom } from '../../../../atoms/productAtoms';
+import { useNotifications } from '../../../../hooks/useNotifications';
 
 interface ProductFormProps {
-  productForm: {
-    name: string;
-    price: number;
-    stock: number;
-    description: string;
-    discounts: Array<{ quantity: number; rate: number }>;
-  };
-  editingProduct: string | null;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
-  setProductForm: (form: any) => void;
-  addNotification: (
-    message: string,
-    type: 'error' | 'success' | 'warning'
-  ) => void;
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({
-  productForm,
-  editingProduct,
   onSubmit,
   onCancel,
-  setProductForm,
-  addNotification,
 }) => {
+  const [productForm, setProductForm] = useAtom(productFormAtom);
+  const [editingProduct] = useAtom(editingProductAtom);
+  const { addNotification } = useNotifications();
+
   return (
     <div className='p-6 border-t border-gray-200 bg-gray-50'>
       <form onSubmit={onSubmit} className='space-y-4'>
@@ -115,14 +105,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               onBlur={e => {
                 const value = e.target.value;
                 if (value === '') {
-                  setProductForm({ ...productForm, price: 0 });
+                  setProductForm({ ...productForm, stock: 0 });
                 } else if (parseInt(value) < 0) {
                   const validationResult = productService.validateStock(value);
                   if (!validationResult.isValid) {
                     addNotification(validationResult.message, 'error');
                     setProductForm({
                       ...productForm,
-                      price: validationResult.correctedValue || 0,
+                      stock: validationResult.correctedValue || 0,
                     });
                   }
                 }
