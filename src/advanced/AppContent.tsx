@@ -15,10 +15,7 @@ export const AppContent = () => {
 
   const { debouncedSearchTerm } = useSearch();
 
-  const {
-    onClearSelectedCoupon,
-    onApplyCoupon,
-  } = useCoupon();
+  const { onClearSelectedCoupon, onApplyCoupon } = useCoupon();
 
   const {
     products,
