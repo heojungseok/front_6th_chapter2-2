@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coupon } from '../../../types';
+import { Coupon } from '../../../../types';
 
 interface CouponCardProps {
   coupon: Coupon;

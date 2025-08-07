@@ -30,6 +30,7 @@ export interface Coupon {
 export const couponsAtom = atomWithStorage<Coupon[]>('coupons', initialCoupons);
 export const selectedCouponAtom = atom<Coupon | null>(null);
 export const couponFormAtom = atom({
+  id: '',
   name: '',
   code: '',
   discountType: 'amount' as 'amount' | 'percentage',

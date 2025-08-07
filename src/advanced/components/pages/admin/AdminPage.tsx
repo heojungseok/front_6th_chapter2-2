@@ -83,16 +83,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({
           addNotification={addNotification}
         />
       ) : (
-        <CouponManagement
-          coupons={coupons}
-          couponForm={couponForm}
-          showCouponForm={showCouponForm}
-          onRemoveCoupon={onRemoveCoupon}
-          onAddCoupon={onAddCoupon}
-          setCouponForm={setCouponForm}
-          setShowCouponForm={setShowCouponForm}
-          addNotification={addNotification}
-        />
+        <CouponManagement />
       )}
     </div>
   );
