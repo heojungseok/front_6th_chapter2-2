@@ -1,40 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useAtom } from 'jotai';
+import { useCallback } from 'react';
 import { CartItem, Coupon } from '../types';
-import { useLocalStorage } from './useLocalStorage';
+import { cartAtom } from '../atoms/cartAtoms';
+import { couponsAtom, selectedCouponAtom } from '../atoms/couponAtoms';
 import { couponService } from '../services/couponService';
-
-/**
- * 초기 쿠폰 목록
- */
-const initialCoupons: Coupon[] = [
-  {
-    name: '5000원 할인',
-    code: 'AMOUNT5000',
-    discountType: 'amount',
-    discountValue: 5000,
-  },
-  {
-    name: '10% 할인',
-    code: 'PERCENT10',
-    discountType: 'percentage',
-    discountValue: 10,
-  },
-];
-
-/**
- * 쿠폰 관리 Hook의 Props 인터페이스
- */
-interface UseCouponsProps {
-  cart: CartItem[];
-  calculateCartTotal: (
-    cart: CartItem[],
-    coupon: Coupon | null
-  ) => {
-    totalBeforeDiscount: number;
-    totalAfterDiscount: number;
-  };
-  addNotification: (message: string, type: 'success' | 'error') => void;
-}
+import { calculateCartTotal } from '../utils/calculators';
+import { useNotifications } from './useNotifications';
 
 /**
  * 쿠폰 상태를 관리하는 커스텀 Hook
@@ -50,16 +21,11 @@ interface UseCouponsProps {
  * @param addNotification - 알림 추가 함수
  * @returns 쿠폰 관련 상태와 함수들
  */
-export const useCoupon = ({
-  cart,
-  calculateCartTotal,
-  addNotification,
-}: UseCouponsProps) => {
-  const [coupons, setCoupons] = useLocalStorage<Coupon[]>(
-    'coupons',
-    initialCoupons
-  );
-  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+export const useCoupon = () => {
+  const [cart] = useAtom(cartAtom);
+  const [coupons, setCoupons] = useAtom(couponsAtom);
+  const [selectedCoupon, setSelectedCoupon] = useAtom(selectedCouponAtom);
+  const { addNotification } = useNotifications();
 
   const onApplyCoupon = useCallback(
     (coupon: Coupon) => {
@@ -76,7 +42,7 @@ export const useCoupon = ({
 
       setSelectedCoupon(coupon);
     },
-    [cart, calculateCartTotal]
+    [cart, calculateCartTotal, addNotification]
   );
 
   const onAddCoupon = useCallback(

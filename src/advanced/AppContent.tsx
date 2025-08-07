@@ -24,7 +24,7 @@ export const AppContent = () => {
     onRemoveCoupon,
     onClearSelectedCoupon,
     onApplyCoupon,
-  } = useCoupon({ cart: [], calculateCartTotal, addNotification });
+  } = useCoupon();
 
   const {
     products,

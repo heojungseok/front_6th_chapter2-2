@@ -1,14 +1,14 @@
 import React from 'react';
+import { useAtom } from 'jotai';
+import { activeTabAtom } from '../../../atoms/uiAtoms';
 
-interface AdminHeaderProps {
-  activeTab: 'products' | 'coupons';
-  onSetActiveTab: (tab: 'products' | 'coupons') => void;
-}
+export const AdminHeader: React.FC = () => {
+  const [activeTab, setActiveTab] = useAtom(activeTabAtom);
 
-export const AdminHeader: React.FC<AdminHeaderProps> = ({
-  activeTab,
-  onSetActiveTab,
-}) => {
+  const onSetActiveTab = (tab: 'products' | 'coupons') => {
+    setActiveTab(tab);
+  };
+
   return (
     <>
       <div className='mb-8'>

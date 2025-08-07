@@ -45,6 +45,7 @@ export interface CartItem {
 }
 
 export interface Coupon {
+  id: string;
   name: string;
   code: string;
   discountType: 'amount' | 'percentage';

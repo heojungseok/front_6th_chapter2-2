@@ -1,36 +1,43 @@
 import React from 'react';
-import { Coupon } from '../../../types';
+import { useAtom } from 'jotai';
+import {
+  couponsAtom,
+  couponFormAtom,
+  selectedCouponAtom,
+} from '../../../atoms/couponAtoms';
+import { useNotifications } from '../../../hooks/useNotifications';
 import { CouponCard, AddCouponButton, CouponForm } from './coupon';
+import { showCouponFormAtom } from '../../../atoms/uiAtoms';
+import { useCoupon } from '../../../hooks/useCoupon';
+import { useCouponForm } from '../../../hooks/useCouponForm';
 
-interface CouponManagementProps {
-  coupons: Coupon[];
-  couponForm: {
-    name: string;
-    code: string;
-    discountType: 'amount' | 'percentage';
-    discountValue: number;
-  };
-  showCouponForm: boolean;
-  onRemoveCoupon: (code: string) => void;
-  onAddCoupon: (coupon: Omit<Coupon, 'id'>) => void;
-  setCouponForm: (form: any) => void;
-  setShowCouponForm: (show: boolean) => void;
-  addNotification: (
-    message: string,
-    type: 'error' | 'success' | 'warning'
-  ) => void; // 타입 수정
-}
+// interface CouponManagementProps {
+//   coupons: Coupon[];
+//   couponForm: {
+//     name: string;
+//     code: string;
+//     discountType: 'amount' | 'percentage';
+//     discountValue: number;
+//   };
+//   showCouponForm: boolean;
+//   onRemoveCoupon: (code: string) => void;
+//   onAddCoupon: (coupon: Omit<Coupon, 'id'>) => void;
+//   setCouponForm: (form: any) => void;
+//   setShowCouponForm: (show: boolean) => void;
+//   addNotification: (
+//     message: string,
+//     type: 'error' | 'success' | 'warning'
+//   ) => void; // 타입 수정
+// }
 
-export const CouponManagement: React.FC<CouponManagementProps> = ({
-  coupons,
-  couponForm,
-  showCouponForm,
-  onRemoveCoupon,
-  onAddCoupon,
-  setCouponForm,
-  setShowCouponForm,
-  addNotification,
-}) => {
+export const CouponManagement: React.FC = () => {
+  const [coupons] = useAtom(couponsAtom);
+  const [showCouponForm] = useAtom(showCouponFormAtom);
+  const [selectedCoupon] = useAtom(selectedCouponAtom);
+  const { onRemoveCoupon, onAddCoupon, onClearSelectedCoupon } = useCoupon();
+  const { setCouponForm, resetCouponForm, couponForm } = useCouponForm();
+  const { addNotification } = useNotifications();
+
   const handleCouponSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAddCoupon(couponForm);
