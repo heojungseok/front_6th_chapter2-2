@@ -1,5 +1,5 @@
 
-# Advanced 과제 Step 3: ProductForm 및 AdminPage Jotai 적용 완료
+# Advanced 과제 Step 3: ProductForm, AdminPage, ProductList, CartSidebar Jotai 적용 완료
 
 ## �� 현재 작업 현황
 
@@ -29,32 +29,49 @@
 - [x] **상태 관련 props 제거**: `coupons`, `couponForm`, `showCouponForm`, `products`, `editingProduct`, `productForm`, `showProductForm`, `cart`, `isAdmin`, `activeTab`, `addNotification`
 - [x] **상태 설정 함수 props 제거**: `setProductForm`, `setEditingProduct`, `setShowProductForm`, `onRemoveCoupon`, `onAddCoupon`, `setCouponForm`, `setShowCouponForm`
 
+#### 5. ProductList.tsx Jotai 적용 완료
+- [x] **Props Drilling 완전 제거**: 6개 props → 0개 props (완전히 독립적인 컴포넌트)
+- [x] **Jotai atoms 직접 사용**: `useAtom(productsAtom)`, `useAtom(filteredProductsAtom)`, `useAtom(cartAtom)`, `useAtom(searchTermAtom)`, `useAtom(isAdminAtom)`
+- [x] **액션 atom 사용**: `useSetAtom(addToCartAtom)` 사용하여 장바구니 추가 기능 구현
+- [x] **컴포넌트 완전 독립화**: 부모 컴포넌트에서 상태 전달 완전 불필요
+
+#### 6. CartSidebar.tsx Jotai 적용 완료
+- [x] **Props Drilling 대폭 감소**: 9개 props → 5개 props (이벤트 핸들러만 유지)
+- [x] **상태 관련 props 제거**: `cart`, `coupons`, `selectedCoupon`, `totals`
+- [x] **Jotai atoms 직접 사용**: `useAtom(cartAtom)`, `useAtom(couponsAtom)`, `useAtom(selectedCouponAtom)`, `useAtom(cartTotalsAtom)`
+- [x] **관심사 분리**: 상태는 Jotai로, 이벤트 핸들러는 props로 유지
+
+#### 7. cartAtoms.ts 액션 atom 추가 완료
+- [x] **addToCartAtom 추가**: 장바구니에 상품 추가하는 액션 atom
+- [x] **cartService 활용**: 기존 서비스 로직 재사용
+- [x] **타입 안전성 확보**: CartItem 타입을 ProductWithUI로 명시적 정의
+
 ### 🔄 진행 중인 작업
 
-#### 5. ShoppingPage 관련 컴포넌트 전환
-- [ ] **ProductList** - Jotai atoms 직접 사용 필요
-- [ ] **CartSidebar** - Jotai atoms 직접 사용 필요
+#### 8. ShoppingPage 관련 컴포넌트 전환
+- [x] **ProductList** - Jotai 전환 완료 ✅
+- [x] **CartSidebar** - Jotai 전환 완료 ✅
 - [ ] **ShoppingPage** - Props Drilling 제거 필요
 
-#### 6. useProducts, useCart 완전 Jotai 전환
+#### 9. useProducts, useCart 완전 Jotai 전환
 - [ ] **useProducts** - Jotai atoms 기반으로 전환 필요
 - [ ] **useCart** - Jotai atoms 기반으로 전환 필요
 
 ### ❌ 아직 미완료된 작업들
 
-#### 7. 성능 최적화
+#### 10. 성능 최적화
 - [ ] useAtomValue 사용 (읽기 전용)
 - [ ] useSetAtom 사용 (쓰기 전용)
 - [ ] React.memo 적용
 
-#### 8. 테스트 및 검증
+#### 11. 테스트 및 검증
 - [ ] 모든 기능이 정상 작동하는지 확인
 - [ ] 리렌더링 최적화 확인
 - [ ] 기존 테스트 케이스 통과 확인
 
 ## 📊 진행률
 
-### 전체 진행률: 85%
+### 전체 진행률: 90%
 
 | 단계                            | 완료도 | 상태       |
 | ------------------------------- | ------ | ---------- |
@@ -62,8 +79,8 @@
 | 2. 기본 상태 Atoms 생성         | 100%   | ✅ 완료    |
 | 3. 파생 상태 Atoms 생성         | 100%   | ✅ 완료    |
 | 4. Custom Hooks 전환            | 80%    | 🔄 진행 중 |
-| 5. 컴포넌트 Props Drilling 제거 | 85%    | 🔄 진행 중 |
-| 6. AppContent 리팩토링          | 90%    | �� 진행 중 |
+| 5. 컴포넌트 Props Drilling 제거 | 90%    | 🔄 진행 중 |
+| 6. AppContent 리팩토링          | 95%    | �� 진행 중 |
 | 7. 성능 최적화                  | 0%     | ❌ 미완료  |
 
 ## 🎯 주요 성과
@@ -76,7 +93,9 @@
 | **AdminPage** | 13개 | 5개 | 62% |
 | **ProductManagement** | 13개 | 4개 | 69% |
 | **AppContent → AdminPage** | 16개 | 5개 | 69% |
-| **전체 평균** | - | - | **66%** |
+| **ProductList** | 6개 | 0개 | 100% |
+| **CartSidebar** | 9개 | 5개 | 44% |
+| **전체 평균** | - | - | **69%** |
 
 ### 코드 품질 개선
 
@@ -100,6 +119,9 @@
 const [productForm, setProductForm] = useAtom(productFormAtom);
 const [editingProduct] = useAtom(editingProductAtom);
 
+// 액션 atom 사용
+const addToCart = useSetAtom(addToCartAtom);
+
 // Hook 기반 상태 관리
 const { addNotification } = useNotifications();
 
@@ -116,20 +138,25 @@ const { addNotification } = useNotifications();
 | **전역 상태** | ❌ | ✅ |
 | **UI 설정** | ✅ | ❌ |
 
+### 액션 Atoms 패턴
+
+```typescript
+// cartAtoms.ts
+export const addToCartAtom = atom(null, (get, set, product: ProductWithUI) => {
+  const cart = get(cartAtom);
+  const newCart = cartService.addItemToCart(product, cart);
+  set(cartAtom, newCart);
+});
+```
+
 ## �� 다음 단계 계획
 
-### 우선순위 1: ShoppingPage 전환 (1-2시간)
+### 우선순위 1: ShoppingPage 전환 (30분-1시간)
 
-1. **ProductList Jotai 전환**
-   - `productsAtom` 직접 사용
-   - Props Drilling 제거
-
-2. **CartSidebar Jotai 전환**
-   - `cartAtom`, `cartTotalsAtom` 직접 사용
-   - Props Drilling 제거
-
-3. **ShoppingPage Props Drilling 제거**
-   - 하위 컴포넌트들이 Jotai 직접 사용하도록 변경
+1. **ShoppingPage Props Drilling 제거**
+   - 13개 props → 5개 props로 간소화 (이벤트 핸들러만)
+   - 상태 관련 props 제거 (products, filteredProducts, cart, coupons, selectedCoupon, totals, searchTerm, isAdmin)
+   - Jotai atoms 직접 사용
 
 ### 우선순위 2: useProducts, useCart 완전 전환 (1-2시간)
 
@@ -176,6 +203,13 @@ const { addNotification } = useNotifications();
 - **액션 atoms**: 상태 변경 로직 캡슐화
 - **Hook 기반**: 복잡한 로직은 custom hook으로 분리
 
+### 4. 도메인 설계 원칙
+
+- **cartAtoms**: 장바구니 관련 모든 액션 집중
+- **productAtoms**: 상품 관련 상태 관리
+- **uiAtoms**: UI 상태 관리
+- **관심사 분리**: 각 도메인별로 atoms 분리
+
 ## 📝 다음 작업 시 주의사항
 
 1. **점진적 변경**: 한 번에 모든 것을 바꾸지 말고 단계별로 진행
@@ -183,10 +217,6 @@ const { addNotification } = useNotifications();
 3. **테스트 검증**: 각 단계마다 기존 테스트가 통과하는지 확인
 4. **성능 고려**: 불필요한 리렌더링이 발생하지 않는지 확인
 5. **관심사 분리**: 이벤트 핸들러는 props로 유지하여 비즈니스 로직 분리
+6. **도메인 일관성**: 관련 액션들은 같은 atoms 파일에 집중
 
 ---
-
-**마지막 업데이트**: 2024년 현재
-**작성자**: AI Assistant
-**상태**: 진행 중 (85% 완료)
-**다음 마일스톤**: ShoppingPage Jotai 전환 완료
